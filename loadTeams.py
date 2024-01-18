@@ -4,7 +4,7 @@ import pyodbc
 server = 'golem.csse.rose-hulman.edu'
 database = 'NBAOverUnderDB'
 username = 'nbaoverunderuser'
-password = 'NBAPassword123'
+password = 'NBAPassword123' #TODO: Encode this information
 cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
                       server+';DATABASE='+database+';UID='+username+';PWD=' + password)
 

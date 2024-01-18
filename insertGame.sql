@@ -1,7 +1,7 @@
 USE NBAOverUnderDB
 Go
 
-CREATE PROCEDURE InsertGameByTeamNames(@HomeTeamName VARCHAR(255), @AwayTeamName VARCHAR(255))
+CREATE PROCEDURE InsertGameByTeamNames(@HomeTeamName VARCHAR(255), @AwayTeamName VARCHAR(255), @GameDate Date)
 AS
 BEGIN
     DECLARE @HomeTeamID INT;
@@ -23,7 +23,7 @@ BEGIN
 		Return 1
 	END
 
-    INSERT INTO Game ([Home Team ID], [Away Team ID])
-    VALUES (@HomeTeamID, @AwayTeamID);
+    INSERT INTO Game ([Home Team ID], [Away Team ID], [GameDate])
+    VALUES (@HomeTeamID, @AwayTeamID, @GameDate);
 	Return 0
 END;
