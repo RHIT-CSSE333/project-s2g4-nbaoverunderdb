@@ -1,0 +1,103 @@
+/* General Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Navigation Bar Styling */
+nav {
+    background-color: #004d99;
+    color: white;
+    padding: 10px 0;
+    overflow: hidden;
+}
+
+nav ul {
+    padding: 0;
+    list-style: none;
+    text-align: center;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 20px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+nav ul li a:hover,
+nav ul li a:focus {
+    text-decoration: underline;
+}
+
+/* Main Section Styling */
+main {
+    padding: 20px;
+    margin-top: 20px;
+}
+
+h2, h3 {
+    color: #333;
+}
+
+figure {
+    text-align: center;
+}
+
+figure img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Predictor Form Styling */
+section#predictor {
+    background-color: #e6e6e6;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+form.grid {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 20px;
+}
+
+form.grid input[type="text"],
+form.grid button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form.grid button {
+    background-color: #004d99;
+    color: white;
+    cursor: pointer;
+}
+
+form.grid button:hover {
+    background-color: #003366;
+}
+
+/* Footer Styling */
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    background-color: #f4f4f4;
+}
+
+footer small a {
+    color: #004d99;
+    text-decoration: none;
+}
+
+footer small a:hover {
+    text-decoration: underline;
+}
