@@ -5,16 +5,16 @@ AS
 BEGIN
 	IF(@Name IS NULL)
 	BEGIN
-		PRINT("ERROR: Name is null")
+		PRINT('ERROR: Name is null')
 		RETURN 1
 	END
 	IF(EXISTS(SELECT * FROM [Team] WHERE Name = @Name))
 	BEGIN
-		PRINT("ERROR: Team already exists")
+		PRINT('ERROR: Team already exists')
 		RETURN 2
 	END
-	INSERT INTO Team (Name)
+	INSERT INTO Team(Name)
 	VALUES(@Name)
-	PRINT("SUCCESSFUL INSERT")
+	PRINT('SUCCESSFUL INSERT')
 	RETURN 0
 END
