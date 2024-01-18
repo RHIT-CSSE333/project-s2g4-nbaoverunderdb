@@ -13,11 +13,14 @@ csv_file = 'nbadata.csv'
 df = pd.read_csv(csv_file)
 
 for index, row in df.iterrows():
-    home_team_name = row['HomeTeam']
-    away_team_name = row['AwayTeam']
+    PName = row['Player'].split(" ")
+    FName = PName[0]
+    LName = PName[1]
 
     with cnxn.cursor() as cursor:
-        cursor.execute("EXEC InsertGameByTeamNames ?, ?", home_team_name, away_team_name)
+        cursor.execute("EXEC ADDPLAYER ?, ?", FName, LName)
         cnxn.commit()
+        
+
 
 cnxn.close()
