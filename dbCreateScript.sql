@@ -24,10 +24,10 @@ Primary Key(ID)
 )
 
 Create Table [User](
- 
-Username varchar(255),
-Email varchar(255),
-[password] varchar(255),
+Username nvarchar(255),
+Email varchar(255) NOT NULL,
+[PasswordSalt] varchar(255) NOT NULL,
+[PasswordHash] varchar(255) NOT NULL,
 Primary Key(Username),
 )
 
