@@ -15,7 +15,7 @@ as
 			print 'player already exists';
 			Return 2
 		end
-		Insert into Player(First,Last)
-		Values(@FName,@LName);
+		Insert into Player(First,Last,TeamID, StatsID)
+		Values(@FName,@LName,@TeamID,@StatsID);
 	end
 	
