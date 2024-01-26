@@ -9,26 +9,13 @@ CREATE PROCEDURE AddStats
 	@StatsID int OUTPUT
 AS
 BEGIN
-	IF @FName IS NULL OR @LName IS NULL
-	BEGIN
-		PRINT 'ERROR: INSERTED NULL VALUES';
-		RETURN 1;
-	END
-
-	IF NOT EXISTS (SELECT 1 FROM Player WHERE First = @FName AND Last = @LName)
-	BEGIN
-		PRINT 'ERROR: Player does not exist';
-		RETURN 2;
-	END
 
 	-- Insert and capture the identity
-	DECLARE @InsertedStatsID table (ID int);
 	INSERT INTO [Statistics] (Points, Assists, Rebounds, Steals, Blocks)
-	OUTPUT INSERTED.ID INTO @InsertedStatsID
 	VALUES (@PointsAvg, @AssistsAvg, @ReboundsAvg, @StealsAvg, @BlocksAvg);
 
 	-- Set the output parameter
-	SELECT TOP 1 @StatsID = ID FROM @InsertedStatsID;
+	SET @StatsID = @@IDENTITY
 
 	-- Assuming successful insertion
 	RETURN 0;

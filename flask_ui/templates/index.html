@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <title>NBA Stat Predictor</title>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor</strong></li>
+        </ul>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#predictor">Predictor</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        <div class="grid">
+            <section>
+                <hgroup>
+                    <h2>Welcome to NBA Stat Predictor</h2>
+                    <h3>Your tool for predicting player performances</h3>
+                </hgroup>
+                <p>Get insights on NBA players' upcoming game performances. Just enter the player details, team they are playing against, and the statistic baseline, and our tool will predict whether the player will be over or under the baseline.</p>
+            </section>
+        </div>
+    </main>
+    <section id="predictor" aria-label="Predictor">
+        <div class="container">
+            <article>
+                <hgroup>
+                    <h2>Predictor Tool</h2>
+                    <h3>Enter Player Details</h3>
+                </hgroup>
+                <form class="grid">
+                    <input type="text" id="player" name="player" placeholder="Player Name" aria-label="Player Name" required />
+                    <select id="homeAway" name="homeAway" aria-label="homeAway" required>
+                        <option value="">Home/Away</option>
+                        <option value="Home">Home</option>
+                        <option value="Away">Away</option>
+                    </select>                   
+                    <input type="text" id="playingAgainst" name="playingAgainst" placeholder="Playing Against" aria-label="Playing Against" required />
+                    <input type="text" id="statistic" name="statistic" placeholder="Statistic" aria-label="Statistic" required />
+                    <input type="text" id="baseline" name="baseline" placeholder="Baseline" aria-label="Baseline" required />
+                    <button type="button" id="predictButton">Predict</button>
+                </form>
+                <div id="predictionResult"></div> <!-- Output placeholder -->
+            </article>
+        </div>
+    </section>
+    <section id="about" aria-label="About">
+        <div class="container">
+            <article>
+                <hgroup>
+                    <h2>About This Tool</h2>
+                    <h3>How it Works</h3>
+                </hgroup>
+                <p>This NBA Stat Predictor uses advanced algorithms and historical data to analyze and predict player performances in upcoming games. By inputting a player's details and the targeted statistic, our tool provides an educated guess on whether they will exceed or fall short of the given baseline.</p>
+            </article>
+        </div>
+    </section>
+    <footer class="container">
+        <small>
+            <!-- <a href="#">Privacy Policy</a> • <a href="#">Terms of Use</a> -->
+        </small>
+    </footer>
+    <script>
+        $(document).ready(function(){
+            const games = [];
+            const players = [];
+            fetch('/data/teams')
+            .then(response => response.text())
+            .then(csvText => {
+                // Split the CSV text into lines
+                const lines = csvText.split('\n');
+                lines.forEach((line, index) => {
+                    if (index === 0) return; // Skip header line
+
+                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
+
+                    const game = columns[0];
+
+                    if (game) {
+                        if (!games.includes(game)) games.push(game);
+                    }
+                });
+            })
+
+            fetch('/data/players')
+            .then(response => response.text())
+            .then(csvText => {
+                // Split the CSV text into lines
+                const lines = csvText.split('\n');
+                lines.forEach((line, index) => {
+                    if (index === 0) return; // Skip header line
+
+                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
+
+                    // Assuming player names are in the first column and game names in the second
+                    const playerName = columns[1];
+
+                    if (players) {
+                        if (!players.includes(playerName)) players.push(playerName);
+                    }
+                });
+            })
+
+
+            var statistics = ["Points", "Assists", "Rebounds", "Steals", "Blocks", ];
+        
+            $("#player").autocomplete({
+                source: players
+            });
+        
+            $("#playingAgainst").autocomplete({
+                source: games
+            });
+        
+            $("#statistic").autocomplete({
+                source: statistics
+            });
+
+            document.getElementById('predictButton').addEventListener('click', function() {
+                // Extract values from input fields
+                const player = document.getElementById('player').value;
+                const homeAway = document.getElementById('homeAway').value;
+                const playingAgainst = document.getElementById('playingAgainst').value;
+                const statistic = document.getElementById('statistic').value;
+                const baseline = document.getElementById('baseline').value;
+
+                // Create a data object containing these values
+                const data = { player, homeAway, playingAgainst, statistic, baseline };
+
+                // Send a POST request with this data
+                fetch('/execute-script', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('predictionResult').textContent = 'Prediction: ' + data.result;
+                })
+                .catch(error => console.error('Error:', error));
+            });
+                        
+
+        });
+        </script>
+</body>
+</html>
