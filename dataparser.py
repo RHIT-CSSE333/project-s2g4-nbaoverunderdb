@@ -23,10 +23,25 @@ for index, row in df.iterrows():
     stlAvg = row['STL']
 
     with cnxn.cursor() as cursor:
-        cursor.execute("EXEC @StatsID = AddStats ?,?, ?, ?, ?, ?, ?", FName, LName, ptsAvg, assistAvg, rebAvg, stlAvg, blkAvg)
-        StatsID = cursor.fetchval()
-        print(StatsID)
-        cursor.execute("EXEC ADDPLAYER ?, ?, ?, ?", FName, LName, None, stat_id)
+        sql = """
+            DECLARE @OutputStatsID INT;
+            EXEC AddStats = @FName=?, @LName=?, @PointsAvg=?, @AssistsAvg=?, @ReboundsAvg=?, @StealsAvg=?, @BlocksAvg=?, @StatsID=@OutputStatsID OUTPUT;
+            SELECT @OutputStatsID
+            """
+            
+        # Execute the stored procedure and get the output
+    # Prepare and execute the stored procedure with an OUTPUT parameter
+        cursor.execute("""
+            DECLARE @OutputStatsID INT;
+            EXEC AddStats @FName=?, @LName=?, @PointsAvg=?, @AssistsAvg=?, @ReboundsAvg=?, @StealsAvg=?, @BlocksAvg=?, @StatsID=@OutputStatsID OUTPUT;
+            INSERT INTO #TempStatsID (StatsID) VALUES (@OutputStatsID);
+            """, (FName, LName, ptsAvg, assistAvg, rebAvg, stlAvg, blkAvg))
+
+        # Retrieve the output parameter from the temporary table
+        cursor.execute("SELECT StatsID FROM #TempStatsID")
+        StatsID = cursor.fetchone()[0]
+        print("StatsID:", StatsID)
+        cursor.execute("EXEC ADDPLAYER ?, ?, ?, ?", FName, LName, None, StatsID)
         cnxn.commit()
 
         
