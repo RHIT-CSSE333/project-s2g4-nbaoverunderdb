@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 import pyodbc
 import bcrypt
@@ -7,7 +7,7 @@ secret_key = os.urandom(24)
 
 # Flask application setup
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = secret_key
 
 # Flask-Login setup
 login_manager = LoginManager()
