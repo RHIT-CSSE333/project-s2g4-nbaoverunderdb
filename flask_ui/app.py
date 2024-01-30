@@ -1,15 +1,120 @@
-from flask import Flask, render_template, jsonify, request   
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 import pyodbc
+import bcrypt
+import os
+secret_key = os.urandom(24)
 
+# Flask application setup
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+
+# Flask-Login setup
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# Database configuration
+config = {
+    'server': 'golem.csse.rose-hulman.edu',
+    'database': 'NBAOverUnderDB',
+    'username': 'nbaoverunderuser',
+    'password': 'NBAPassword123'
+}
+
+# User model for Flask-Login
+class User(UserMixin):
+    def __init__(self, username):
+        self.id = username
+
+@login_manager.user_loader
+def load_user(username):
+    return User(username)
+
+def get_db_connection():
+    return pyodbc.connect(
+        'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
+        config['server'] + ';DATABASE=' + config['database'] + 
+        ';UID=' + config['username'] + ';PWD=' + config['password'])
+
+def login_logic(username, password):
+    try:
+        cnxn = get_db_connection()
+        cursor = cnxn.cursor()
+
+        cursor.execute("EXEC LoginQuery @Username=?", username)
+        result = cursor.fetchone()
+
+
+        if result:
+            password_salt = result.PasswordSalt.encode('utf-8')
+            password_hash = result.PasswordHash.encode('utf-8')
+            new_hashed = bcrypt.hashpw(password.encode('utf-8'), password_salt)
+            return password_hash == new_hashed
+            # print(new_hashed)
+            # print(password_hash)
+            # return bcrypt.checkpw(new_hashed, password_hash)
+        return False
+    except Exception as e:
+        print("Error:", e)
+        return False
+    finally:
+        cnxn.close()
+
+def register_logic(username, email, password):
+    try:
+        cnxn = get_db_connection()
+        cursor = cnxn.cursor()
+
+        salt = bcrypt.gensalt()
+        hash = bcrypt.hashpw(password.encode('utf-8'), salt)
+
+        cursor.execute("EXEC Register @Username=?, @Email=?, @PasswordSalt=?, @PasswordHash=?", 
+                       username, email, salt.decode('utf-8'), hash.decode('utf-8'))
+        cnxn.commit()
+
+        return cursor.rowcount == 0
+    except Exception as e:
+        print("Error:", e)
+        return False
+    finally:
+        cnxn.close()
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if login_logic(username, password):
+            user = User(username)
+            login_user(user)
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        if register_logic(username, email, password):
+            return redirect(url_for('login'))
+        else:
+            flash('Registration failed')
+    return render_template('register.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 @app.route('/')
+@login_required
 def home():
     return render_template('index.html')
-
-@app.route('/login')
-def login():
-    return render_template('login.html')
 
 @app.route('/data/players')
 def get_team_data():

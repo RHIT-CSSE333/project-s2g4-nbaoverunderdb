@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Register</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,7 +15,7 @@
             height: 100vh;
         }
 
-        .login-container {
+        .register-container {
             background-color: #fff;
             padding: 40px;
             border-radius: 15px;
@@ -24,19 +24,19 @@
             text-align: center;
         }
 
-        .login-container h2 {
+        .register-container h2 {
             margin-bottom: 24px;
             color: #495057;
         }
 
-        .login-container label {
+        .register-container label {
             display: block;
             text-align: left;
             margin-bottom: 5px;
             color: #495057;
         }
 
-        .login-container input {
+        .register-container input {
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
@@ -45,7 +45,7 @@
             border: 1px solid #ced4da;
         }
 
-        .login-container button {
+        .register-container button {
             background-color: #007bff;
             color: #fff;
             padding: 10px 15px;
@@ -55,7 +55,7 @@
             width: 100%;
         }
 
-        .register-link {
+        .login-link {
             display: block;
             margin-top: 20px;
             color: #007bff;
@@ -63,24 +63,30 @@
             font-size: 0.9em;
         }
 
-        .register-link:hover {
+        .login-link:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form action="/login" method="post"> <!-- Updated action attribute -->
+    <div class="register-container">
+        <h2>Register</h2>
+        <form action="/register" method="post">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
 
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
 
-            <button type="submit">Login</button>
+            <label for="confirm-password">Confirm Password:</label>
+            <input type="password" id="confirm-password" name="confirm-password" required>
+
+            <button type="submit">Register</button>
         </form>
-        <a href="register" class="register-link">Don't have an account? Register here</a>
+        <a href="login" class="login-link">Already have an account? Login here</a>
     </div>
 </body>
 </html>

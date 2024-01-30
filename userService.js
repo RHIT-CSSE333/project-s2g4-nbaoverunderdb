@@ -31,19 +31,16 @@ async function login(username, password) {
         const passwordHash = result.value("PasswordHash");
         console.log('Password Hash:', passwordHash);
         
-        bcrypt.hash(password, salt, function(err, hash){
-            const hashedPassword = hash;
-        });
-        bcrypt.compare(hashedPassword, PasswordHash, function(err, result) {
-            if (result) {
-                console.log("Login successful");
-                return true;
-            }
-            else {
-                console.log("Invalid login");
-                return false;
-            }
-        });
+        const hashedPass = await bcrypt.hash(password, salt)
+        const passResult = await bcrypt.compare(hashedPass, PasswordHash)
+        if (passResult) {
+            console.log("Login successful");
+            return true;
+        }
+        else {
+            console.log("Invalid login");
+            return false;
+        };
         
     } catch (err) {
         console.error('Error:', err);
@@ -62,12 +59,15 @@ async function register(username, email, password) {
         const request = new sql.Request();
         request.input('Username', sql.VarChar(255), username);
         request.input('Email', sql.VarChar(255), email);
-        bcrypt.genSalt(10, function(err, salt) {  
-            bcrypt.hash(password, salt, function(err, hash) {
-                request.input('PasswordSalt', sql.VarChar(255), salt);
-                request.input('PasswordHash', sql.VarChar(255), hash);
-            });
-        });
+
+        // Generate salt and hash password
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+
+        // Set up the parameters for salt and hash
+        request.input('PasswordSalt', sql.VarChar(255), salt);
+        request.input('PasswordHash', sql.VarChar(255), hash);
+
 
         // Execute the stored procedure
         const result = await request.execute('Register');
