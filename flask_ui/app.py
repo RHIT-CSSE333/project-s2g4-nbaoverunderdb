@@ -61,6 +61,39 @@ def login_logic(username, password):
     finally:
         cnxn.close()
 
+@app.route('/addFavoriteTeam', methods=['POST'])
+def add_favorite_team():
+    team_name = request.json['teamName']
+    user_name = request.json['userName']
+    cnxn = get_db_connection()
+    
+    cursor = cnxn.cursor()
+    try:
+        cursor.execute("EXEC AddFavoriteTeam @TeamName = ?, @UserName = ?", team_name, user_name)
+        cnxn.commit()
+        return jsonify({'success': True, 'message': 'Team added successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error adding team', 'error': str(e)})
+    finally:
+        cursor.close()
+
+@app.route('/addFavoritePlayer', methods=['POST'])
+def add_favorite_player():
+    first_name = request.json['firstName']
+    last_name = request.json['lastName']
+    user_name = request.json['userName']
+    cnxn = get_db_connection()
+    
+    cursor = cnxn.cursor()
+    try:
+        cursor.execute("EXEC AddFavoritePlayer @PlayerFName = ?, @PlayerLName = ?, @UserName = ?", first_name, last_name, user_name)
+        cnxn.commit()
+        return jsonify({'success': True, 'message': 'Player added successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error adding player', 'error': str(e)})
+    finally:
+        cursor.close()
+        
 def register_logic(username, email, password):
     try:
         cnxn = get_db_connection()
@@ -87,6 +120,7 @@ def login():
         password = request.form['password']
         if login_logic(username, password):
             user = User(username)
+            
             login_user(user)
             return redirect(url_for('home'))
         else:
@@ -115,6 +149,11 @@ def logout():
 @login_required
 def home():
     return render_template('index.html')
+
+@app.route('/favorite')
+@login_required
+def favorite():
+    return render_template('favorite.html')
 
 @app.route('/data/players')
 def get_team_data():
@@ -163,7 +202,7 @@ def run_prediction(player, homeAway, playingAgainst, stat, baseline):
         print(f"{stat} for {player}: {player_stat[0][0]}")
         return player_stat[0][0]
 
-    
+
 
 def call_find_player_stat(first_name, last_name, stat):
     # Database connection parameters

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Favorites</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+   
+</head>
+<body>
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <form id="favoriteTeamForm">
+                <input type="text" id="teamName" placeholder="Team Name" required>
+                <button type="submit">Add Favorite Team</button>
+            </form>
+        </div>
+
+        <div class="popup-content">
+            <form id="favoritePlayerForm">
+                <input type="text" id="firstName" placeholder="First Name" required>
+                <input type="text" id="lastName" placeholder="Last Name" required>
+                <button type="submit">Add Favorite Player</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('favoriteTeamForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var teamName = document.getElementById('teamName').value;
+            var userName = document.getElementById('userNameTeam').value;
+            submitData('/addFavoriteTeam', { teamName, userName });
+        });
+    
+        document.getElementById('favoritePlayerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var firstName = document.getElementById('firstName').value;
+            var lastName = document.getElementById('lastName').value;
+            var userName = document.getElementById('userNamePlayer').value;
+            submitData('/addFavoritePlayer', { firstName, lastName, userName });
+        });
+    
+        function submitData(url, data) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                // You can add code here to update the UI based on the response
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
