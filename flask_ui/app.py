@@ -106,7 +106,10 @@ def register_logic(username, email, password):
                        username, email, salt.decode('utf-8'), hash.decode('utf-8'))
         cnxn.commit()
 
-        return cursor.rowcount == 0
+        # TODO: Find a better way to check for successfull registration (Maybe use js function and get return value)
+        cursor.execute("SELECT * FROM User WHERE Username=? AND Email=? AND PasswordSalt=? AND PasswordHash=?", username, email, salt.decode('utf-8'), hash.decode('utf-8'))
+        user = cursor.fetchone()
+        return user
     except Exception as e:
         print("Error:", e)
         return False
@@ -162,6 +165,18 @@ def get_team_data():
 @app.route('/data/teams')
 def get_player_data():
     return render_template('/data/teams.csv')
+
+@app.route('/picks')
+@login_required
+def view_picks():
+    # Fetch picks data from your database or data source
+    # For demonstration, using a static list of picks
+    picks = [
+        {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25},
+        {'player': 'Stephen Curry', 'team': 'Warriors', 'playingAgainst': 'Lakers', 'overUnder': 'Under', 'baseline': 30}
+        # Add more picks as needed
+    ]
+    return render_template('picks.html', picks=picks)
 
 @app.route('/execute-script', methods=['POST'])
 def execute_script():

@@ -71,6 +71,15 @@
 <body>
     <div class="register-container">
         <h2>Register</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
         <form action="/register" method="post">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
@@ -80,9 +89,6 @@
 
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
-
-            <label for="confirm-password">Confirm Password:</label>
-            <input type="password" id="confirm-password" name="confirm-password" required>
 
             <button type="submit">Register</button>
         </form>
