@@ -32,16 +32,14 @@
         document.getElementById('favoriteTeamForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var teamName = document.getElementById('teamName').value;
-            var userName = document.getElementById('userNameTeam').value;
-            submitData('/addFavoriteTeam', { teamName, userName });
+            submitData('/addFavoriteTeam', { teamName});
         });
     
         document.getElementById('favoritePlayerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var firstName = document.getElementById('firstName').value;
             var lastName = document.getElementById('lastName').value;
-            var userName = document.getElementById('userNamePlayer').value;
-            submitData('/addFavoritePlayer', { firstName, lastName, userName });
+            submitData('/addFavoritePlayer', { firstName, lastName});
         });
     
         function submitData(url, data) {

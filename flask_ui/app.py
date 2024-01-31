@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 import pyodbc
 import bcrypt
@@ -63,8 +63,11 @@ def login_logic(username, password):
 
 @app.route('/addFavoriteTeam', methods=['POST'])
 def add_favorite_team():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
     team_name = request.json['teamName']
-    user_name = request.json['userName']
+    user_name = session['username']
     cnxn = get_db_connection()
     
     cursor = cnxn.cursor()
@@ -79,9 +82,12 @@ def add_favorite_team():
 
 @app.route('/addFavoritePlayer', methods=['POST'])
 def add_favorite_player():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
     first_name = request.json['firstName']
     last_name = request.json['lastName']
-    user_name = request.json['userName']
+    user_name = session['username']
     cnxn = get_db_connection()
     
     cursor = cnxn.cursor()
@@ -122,8 +128,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         if login_logic(username, password):
+            session['username'] = username
             user = User(username)
-            
             login_user(user)
             return redirect(url_for('home'))
         else:
