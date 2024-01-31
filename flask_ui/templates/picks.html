@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <title>NBA Stat Predictor - Picks</title>
+    <style>
+        /* Copy styles from main page */
+        .nav-button, .logout-button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .nav-button:hover, .logout-button:hover {
+            background-color: white;
+            color: #007bff;
+            border: 1px solid #007bff;
+        }
+
+        .logout-button {
+            background-color: #f44336;
+        }
+
+        .logout-button:hover {
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        /* Additional styles for the picks page */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/" class="nav-button">Home</a></li>
+            <li><a href="/picks" class="nav-button">My Picks</a></li>
+            <li><a href="/parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/logout" class="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    
+    <main class="container">
+        <h1>My Picks</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Team</th>
+                    <th>Playing Against</th>
+                    <th>Over/Under</th>
+                    <th>Baseline</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pick in picks %}
+                    <tr>
+                        <td>{{ pick.player }}</td>
+                        <td>{{ pick.team }}</td>
+                        <td>{{ pick.playingAgainst }}</td>
+                        <td>{{ pick.overUnder }}</td>
+                        <td>{{ pick.baseline }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <footer class="container">
+        <small>
+            <!-- Footer content -->
+        </small>
+    </footer>
+</body>
+</html>
