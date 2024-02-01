@@ -178,6 +178,15 @@ def run_prediction(player, homeAway, playingAgainst, stat, baseline):
         print(f"{stat} for {player}: {player_stat[0][0]}")
         return player_stat[0][0]
 
+@app.route('/save-pick', methods=['POST'])
+def save_pick():
+    data = request.json
+    # Implement logic to save the data to the database
+    # For example:
+    # save_to_database(data)
+    success = True  # Set to False if saving fails
+    return jsonify({'success': success})
+
     
 
 def call_find_player_stat(first_name, last_name, stat):
