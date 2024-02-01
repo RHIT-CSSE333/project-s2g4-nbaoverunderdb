@@ -9,8 +9,47 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
    
 </head>
+<style>
+    /* Existing styles and new styles for top buttons */
+    .nav-button {
+        background-color: #007bff;
+        color: white;
+        padding: 8px 16px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 4px;
+        border: none;
+    }
+
+    .nav-button:hover {
+        background-color: white;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+
+    .logout-button {
+        background-color: #f44336;
+        /* ... rest of your existing logout-button styles ... */
+    }
+
+    /* Reduce whitespace between containers */
+    .container {
+        margin-top: 2px; /* Adjust this value as needed */
+        margin-bottom: 2px; /* Adjust this value as needed */
+        padding: 0;
+    }
+
+    /* ... any other styles you want to add or modify ... */
+</style>
 <body>
-    <a href="/">Back to Home</a>
+    <a href="/" class="nav-button">Back to Home</a>
+    <br>
+    <br>
     <div id="popup" class="popup">
         <div class="popup-content">
             <form id="favoriteTeamForm">
