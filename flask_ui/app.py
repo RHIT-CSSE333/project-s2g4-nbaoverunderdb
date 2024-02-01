@@ -104,12 +104,14 @@ def register_logic(username, email, password):
 
         cursor.execute("EXEC Register @Username=?, @Email=?, @PasswordSalt=?, @PasswordHash=?", 
                        username, email, salt.decode('utf-8'), hash.decode('utf-8'))
+        user = cursor.fetchone()
         cnxn.commit()
 
         # TODO: Find a better way to check for successfull registration (Maybe use js function and get return value)
-        cursor.execute("SELECT * FROM User WHERE Username=? AND Email=? AND PasswordSalt=? AND PasswordHash=?", username, email, salt.decode('utf-8'), hash.decode('utf-8'))
-        user = cursor.fetchone()
-        return user
+        if (user != None):
+            return True
+        else:
+            return False
     except Exception as e:
         print("Error:", e)
         return False
