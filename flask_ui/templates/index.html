@@ -56,6 +56,7 @@
             <li><a href="/" class="nav-button">Home</a></li>
             <li><a href="/picks" class="nav-button">My Picks</a></li>
             <li><a href="/parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/favorite" class="nav-button">Favorites</a></li>
             <li><a href="/logout" class="logout-button">Logout</a></li>
         </ul>
     </nav>
@@ -91,7 +92,6 @@
                     <button type="button" id="predictButton">Predict</button>
                 </form>
                 <div id="predictionResult"></div> <!-- Output placeholder -->
-                <button type="button" id="saveButton" style="display:none;">Save Pick</button> <!-- Save button, initially hidden -->
             </article>
         </div>
         <div>
@@ -119,23 +119,41 @@
             const games = [];
             const players = [];
             fetch('/data/teams')
-            .then(response => response.json()) // Parse the JSON from the response
-            .then(data => {
-                // Assuming 'data' is an array of team names
-                data.forEach(teamName => {
-                    if (!teams.includes(teamName)) teams.push(teamName);
+            .then(response => response.text())
+            .then(csvText => {
+                // Split the CSV text into lines
+                const lines = csvText.split('\n');
+                lines.forEach((line, index) => {
+                    if (index === 0) return; // Skip header line
+
+                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
+
+                    const game = columns[0];
+
+                    if (game) {
+                        if (!games.includes(game)) games.push(game);
+                    }
                 });
             })
-            .catch(error => console.error('Error loading teams:', error));
+
             fetch('/data/players')
-            .then(response => response.json()) // Parse the JSON from the response
-            .then(data => {
-                // Assuming 'data' is an array of player names
-                data.forEach(playerName => {
-                    if (!players.includes(playerName)) players.push(playerName);
+            .then(response => response.text())
+            .then(csvText => {
+                // Split the CSV text into lines
+                const lines = csvText.split('\n');
+                lines.forEach((line, index) => {
+                    if (index === 0) return; // Skip header line
+
+                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
+
+                    // Assuming player names are in the first column and game names in the second
+                    const playerName = columns[1];
+
+                    if (players) {
+                        if (!players.includes(playerName)) players.push(playerName);
+                    }
                 });
             })
-            .catch(error => console.error('Error loading players:', error));
 
 
             var statistics = ["Points", "Assists", "Rebounds", "Steals", "Blocks", ];
@@ -180,44 +198,6 @@
                         
 
         });
-        $(document).ready(function() {
-    // ... existing code ...
-
-    document.getElementById('predictButton').addEventListener('click', function() {
-        // ... existing prediction code ...
-
-        // After prediction, show the save button
-        document.getElementById('saveButton').style.display = 'block';
-    });
-
-    document.getElementById('saveButton').addEventListener('click', function() {
-        const dataToSave = {
-            player: document.getElementById('player').value,
-            homeAway: document.getElementById('homeAway').value,
-            playingAgainst: document.getElementById('playingAgainst').value,
-            statistic: document.getElementById('statistic').value,
-            baseline: document.getElementById('baseline').value,
-            prediction: document.getElementById('predictionResult').textContent
-        };
-
-        fetch('/save-pick', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSave)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Pick saved successfully');
-            } else {
-                alert('Failed to save pick');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-});
         </script>
             <style>
                 .logout-button {

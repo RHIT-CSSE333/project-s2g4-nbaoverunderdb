@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 import pyodbc
 import bcrypt
@@ -63,8 +63,11 @@ def login_logic(username, password):
 
 @app.route('/addFavoriteTeam', methods=['POST'])
 def add_favorite_team():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
     team_name = request.json['teamName']
-    user_name = request.json['userName']
+    user_name = session['username']
     cnxn = get_db_connection()
     
     cursor = cnxn.cursor()
@@ -79,9 +82,12 @@ def add_favorite_team():
 
 @app.route('/addFavoritePlayer', methods=['POST'])
 def add_favorite_player():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
     first_name = request.json['firstName']
     last_name = request.json['lastName']
-    user_name = request.json['userName']
+    user_name = session['username']
     cnxn = get_db_connection()
     
     cursor = cnxn.cursor()
@@ -124,8 +130,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         if login_logic(username, password):
+            session['username'] = username
             user = User(username)
-            
             login_user(user)
             return redirect(url_for('home'))
         else:
@@ -162,23 +168,11 @@ def favorite():
 
 @app.route('/data/players')
 def get_team_data():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("EXEC GetPlayerNames")
-    players = [f"{row[0]} {row[1]}" for row in cursor.fetchall()]
-    cursor.close()
-    conn.close()
-    return jsonify(players)
+    return render_template('/data/nbadata.csv')
 
 @app.route('/data/teams')
 def get_player_data():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("EXEC GetTeamNames")
-    teams = [row[0] for row in cursor.fetchall()]
-    cursor.close()
-    conn.close()
-    return jsonify(teams)
+    return render_template('/data/teams.csv')
 
 @app.route('/picks')
 @login_required
@@ -231,16 +225,7 @@ def run_prediction(player, homeAway, playingAgainst, stat, baseline):
         print(f"{stat} for {player}: {player_stat[0][0]}")
         return player_stat[0][0]
 
-@app.route('/save-pick', methods=['POST'])
-def save_pick():
-    data = request.json
-    # Implement logic to save the data to the database
-    # For example:
-    # save_to_database(data)
-    success = True  # Set to False if saving fails
-    return jsonify({'success': success})
 
-    
 
 def call_find_player_stat(first_name, last_name, stat):
     # Database connection parameters
