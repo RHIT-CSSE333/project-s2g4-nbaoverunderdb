@@ -160,11 +160,23 @@ def favorite():
 
 @app.route('/data/players')
 def get_team_data():
-    return render_template('/data/nbadata.csv')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC GetPlayerNames")
+    players = [f"{row[0]} {row[1]}" for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(players)
 
 @app.route('/data/teams')
 def get_player_data():
-    return render_template('/data/teams.csv')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC GetTeamNames")
+    teams = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(teams)
 
 @app.route('/picks')
 @login_required

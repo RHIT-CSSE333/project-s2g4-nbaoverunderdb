@@ -119,41 +119,23 @@
             const games = [];
             const players = [];
             fetch('/data/teams')
-            .then(response => response.text())
-            .then(csvText => {
-                // Split the CSV text into lines
-                const lines = csvText.split('\n');
-                lines.forEach((line, index) => {
-                    if (index === 0) return; // Skip header line
-
-                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
-
-                    const game = columns[0];
-
-                    if (game) {
-                        if (!games.includes(game)) games.push(game);
-                    }
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of team names
+                data.forEach(teamName => {
+                    if (!teams.includes(teamName)) teams.push(teamName);
                 });
             })
-
+            .catch(error => console.error('Error loading teams:', error));
             fetch('/data/players')
-            .then(response => response.text())
-            .then(csvText => {
-                // Split the CSV text into lines
-                const lines = csvText.split('\n');
-                lines.forEach((line, index) => {
-                    if (index === 0) return; // Skip header line
-
-                    const columns = line.split(','); // Splitting by comma, adjust if your separator is different
-
-                    // Assuming player names are in the first column and game names in the second
-                    const playerName = columns[1];
-
-                    if (players) {
-                        if (!players.includes(playerName)) players.push(playerName);
-                    }
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(playerName => {
+                    if (!players.includes(playerName)) players.push(playerName);
                 });
             })
+            .catch(error => console.error('Error loading players:', error));
 
 
             var statistics = ["Points", "Assists", "Rebounds", "Steals", "Blocks", ];
