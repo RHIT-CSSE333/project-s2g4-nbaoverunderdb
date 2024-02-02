@@ -192,8 +192,7 @@ def view_picks():
     # Fetch picks data from your database or data source
     # For demonstration, using a static list of picks
     picks = [
-        {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25},
-        {'player': 'Stephen Curry', 'team': 'Warriors', 'playingAgainst': 'Lakers', 'overUnder': 'Under', 'baseline': 30}
+        # {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25}, use this format
         # Add more picks as needed
     ]
     return render_template('picks.html', picks=picks)

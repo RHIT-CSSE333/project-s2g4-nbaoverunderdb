@@ -92,6 +92,7 @@
                     <button type="button" id="predictButton">Predict</button>
                 </form>
                 <div id="predictionResult"></div> <!-- Output placeholder -->
+                <button type="button" id="saveButton" style="display:none;">Save Pick</button> <!-- Save button, initially hidden -->
             </article>
         </div>
         <div>
@@ -175,6 +176,45 @@
                         
 
         });
+
+        $(document).ready(function() {
+    // ... existing code ...
+
+    document.getElementById('predictButton').addEventListener('click', function() {
+        // ... existing prediction code ...
+
+        // After prediction, show the save button
+        document.getElementById('saveButton').style.display = 'block';
+    });
+
+    document.getElementById('saveButton').addEventListener('click', function() {
+        const dataToSave = {
+            player: document.getElementById('player').value,
+            homeAway: document.getElementById('homeAway').value,
+            playingAgainst: document.getElementById('playingAgainst').value,
+            statistic: document.getElementById('statistic').value,
+            baseline: document.getElementById('baseline').value,
+            prediction: document.getElementById('predictionResult').textContent
+        };
+
+        fetch('/save-pick', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pick saved successfully');
+            } else {
+                alert('Failed to save pick');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
         </script>
             <style>
                 .logout-button {
