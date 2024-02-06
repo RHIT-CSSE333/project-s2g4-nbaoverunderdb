@@ -1,4 +1,4 @@
-Create Procedure addPlayer
+Create Procedure ADDTEAM
 	@TName varchar(255),
 	@StatsID int = null
 as
