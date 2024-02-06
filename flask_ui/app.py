@@ -166,13 +166,25 @@ def home():
 def favorite():
     return render_template('favorite.html')
 
-@app.route('/data/players')
-def get_team_data():
-    return render_template('/data/nbadata.csv')
-
 @app.route('/data/teams')
+def get_team_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC GetTeamNames")
+    players = [str(row[0]) for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(players)
+
+@app.route('/data/players')
 def get_player_data():
-    return render_template('/data/teams.csv')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("EXEC GetPlayerNames")
+    players = [f"{row[0]} {row[1]}" for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(players)
 
 @app.route('/picks')
 @login_required
@@ -180,11 +192,19 @@ def view_picks():
     # Fetch picks data from your database or data source
     # For demonstration, using a static list of picks
     picks = [
-        {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25},
-        {'player': 'Stephen Curry', 'team': 'Warriors', 'playingAgainst': 'Lakers', 'overUnder': 'Under', 'baseline': 30}
+        # {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25}, use this format
         # Add more picks as needed
     ]
     return render_template('picks.html', picks=picks)
+
+@app.route('/save-pick', methods=['POST'])
+def save_pick():
+    data = request.json
+    # Implement logic to save the data to the database
+    # For example:
+    # save_to_database(data)
+    success = True  # Set to False if saving fails
+    return jsonify({'success': success})
 
 @app.route('/execute-script', methods=['POST'])
 def execute_script():
