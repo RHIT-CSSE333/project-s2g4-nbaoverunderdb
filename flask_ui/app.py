@@ -311,8 +311,11 @@ def view_picks():
 
         picks = []
         for row in picks_data:
+            playerName = None
+            if(row.PlayerFirstName != None or row.PlayerLastName != None):
+                playerName = f"{row.PlayerFirstName} {row.PlayerLastName}"
             picks.append({
-                'player': f"{row.PlayerFirstName} {row.PlayerLastName}",  # Combining first and last names
+                'player': playerName,  # Combining first and last names
                 'team': row.TeamName,
                 'playingAgainst': row.TeamAgainstName,
                 'overUnder': 'Over' if row.Prediction == 1 else 'Under',  # Assuming 1 for Over, 0 for Under
@@ -415,6 +418,7 @@ def save_pick():
 def execute_script():
     # Extract data from the request
     data = request.json
+    playerTeam = data.get('playerTeam')
     player = data.get('player')
     homeAway = data.get('homeAway')
     playingAgainst = data.get('playingAgainst')
@@ -422,7 +426,7 @@ def execute_script():
     baseline = float(data.get('baseline'))
 
     # Your prediction logic here using the extracted data
-    prediction = run_prediction(player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
+    prediction = run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
 
     if prediction:
         if float(prediction) > baseline:
@@ -434,21 +438,32 @@ def execute_script():
 
     return jsonify({'result': prediction})
 
-def run_prediction(player, homeAway, playingAgainst, stat, baseline):
-    print('Running prediction...')
+def run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline):
+    if playerTeam == 'Player': # predict player
+        print('Running player prediction...')
+        # Split the player name into first and last name
+        first_name, last_name = player.split(' ', 1)
 
-    # Split the player name into first and last name
-    first_name, last_name = player.split(' ', 1)
+        # Call the stored procedure and get the stat
+        player_stat = call_find_player_stat(first_name, last_name, stat)
 
-    # Call the stored procedure and get the stat
-    player_stat = call_find_player_stat(first_name, last_name, stat)
+        if player_stat is None:
+            print("No stat found for player:", player)
+            return False
+        else:
+            print(f"{stat} for {player}: {player_stat[0][0]}")
+            return player_stat[0][0]
+    else: # predict team
+        print('Running team prediction...')
+        # Call the stored procedure and get the stat
+        team_stat = call_find_team_stat(player)
 
-    if player_stat is None:
-        print("No stat found for player:", player)
-        return False
-    else:
-        print(f"{stat} for {player}: {player_stat[0][0]}")
-        return player_stat[0][0]
+        if team_stat is None:
+            print("No stat found for team:", player)
+            return False
+        else:
+            print(f"{stat} for {player}: {team_stat[0][0]}")
+            return team_stat[0][0]
 
 
 
@@ -466,6 +481,32 @@ def call_find_player_stat(first_name, last_name, stat):
     try:
         # Calling the stored procedure
         cursor.execute("EXEC dbo.FindPlayerStat ?, ?, ?", first_name, last_name, stat)
+        result = cursor.fetchall()
+
+    except Exception as e:  # Catches any exception and stores it in variable 'e'
+        print("An error occurred:", e)
+        result = None
+
+    finally:
+        cursor.close()  # Ensure the cursor is closed regardless of success or failure
+
+    # You can now use the 'result' variable outside the try-except block
+    return result
+
+def call_find_team_stat(team_name):
+    # Database connection parameters
+    server = 'golem.csse.rose-hulman.edu'
+    database = 'NBAOverUnderDB'
+    username = 'nbaoverunderuser'
+    password = 'NBAPassword123'
+    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
+                          server + ';DATABASE=' + database + ';UID=' +
+                          username + ';PWD=' + password)
+
+    cursor = cnxn.cursor()
+    try:
+        # Calling the stored procedure
+        cursor.execute("EXEC dbo.FindTeamStat ?", team_name)
         result = cursor.fetchall()
 
     except Exception as e:  # Catches any exception and stores it in variable 'e'

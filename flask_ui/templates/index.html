@@ -208,6 +208,7 @@
 
             document.getElementById('predictButton').addEventListener('click', function() {
                 // Extract values from input fields
+                const playerTeam = document.getElementById('playerTeam').value;
                 const player = document.getElementById('player').value;
                 const homeAway = document.getElementById('homeAway').value;
                 const playingAgainst = document.getElementById('playingAgainst').value;
@@ -215,7 +216,7 @@
                 const baseline = document.getElementById('baseline').value;
 
                 // Create a data object containing these values
-                const data = { player, homeAway, playingAgainst, statistic, baseline };
+                const data = { playerTeam, player, homeAway, playingAgainst, statistic, baseline };
 
                 // Send a POST request with this data
                 fetch('/execute-script', {
