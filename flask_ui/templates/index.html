@@ -72,6 +72,27 @@
             </section>
         </div>
     </main>
+    <section>
+        <h3>Favorite Players</h3>
+        <div id="displayFavPlayerStats">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>PTS</th>
+                        <th>Assists</th>
+                        <th>REB</th>
+                        <th>Block</th>
+                        <th>Steals</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+    
     <section id="predictor" aria-label="Predictor">
         <div class="container">
             <article>
@@ -111,9 +132,30 @@
         </div>
     </section>
     <script>
-          $(document).ready(function(){
+    $(document).ready(function(){
+            
             const teams = [];
             const players = [];
+            const favteams = [];
+            const favplayers = [];
+            fetch('/data/favplayers')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(playerName => {
+                    if (!favplayers.includes(playerName)) favplayers.push(playerName);
+                });
+            })
+            .catch(error => console.error('Error loading players:', error));
+            fetch('/data/favteams')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(teamName => {
+                    if (!favteams.includes(teamName)) favteams.push(teamName);
+                });
+            })
+            .catch(error => console.error('Error loading teams:', error));
             fetch('/data/teams')
             .then(response => response.json()) // Parse the JSON from the response
             .then(data => {
@@ -133,13 +175,21 @@
             })
             .catch(error => console.error('Error loading players:', error));
 
+    
 
             var statistics = ["Points", "Assists", "Rebounds", "Steals", "Blocks", ];
-        
+            // $("#favplayers").autocomplete({
+            //     source: favplayers
+            // });
+            
+            // $("#favteams").autocomplete({
+            //     source: favteams
+            // });
             $("#player").autocomplete({
                 source: players
             });
-        
+
+            
             $("#playingAgainst").autocomplete({
                 source: teams
             });
@@ -147,6 +197,7 @@
             $("#statistic").autocomplete({
                 source: statistics
             });
+
 
             document.getElementById('predictButton').addEventListener('click', function() {
                 // Extract values from input fields
@@ -173,8 +224,62 @@
                 })
                 .catch(error => console.error('Error:', error));
             });
-                        
+            fetchFavoritePlayerStats();
 
+            function fetchFavoritePlayerStats() {
+                
+                fetch('/data/favplayers')
+                
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                console.log(data)
+                // Assuming 'data' is an array of player names
+                data.forEach(playerName => {
+                    if (!favplayers.includes(playerName)) favplayers.push(playerName);
+                    fetch('/data/get_player_stats', {
+                    
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Adjust this body to match the expected format of your endpoint
+                
+                body: JSON.stringify({favplayers: favplayers})
+                
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                updateFavPlayerStats(data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+                });
+            })
+            .catch(error => console.error('Error loading players:', error));
+            
+            
+        }
+
+        function updateFavPlayerStats(data) {
+            const tableBody = document.querySelector('#displayFavPlayerStats table tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            console.log(data)
+            data.forEach(player => {
+                const row = `<tr>
+                    <td>${player.first_name} ${player.last_name}</td>
+                    <td>${player.points}</td>
+                    <td>${player.assists}</td>
+                    <td>${player.rebounds}</td>
+                    <td>${player.blocks}</td>
+                    <td>${player.steals}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+                        
         });
 
         $(document).ready(function() {

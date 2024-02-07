@@ -63,6 +63,7 @@ def login_logic(username, password):
 
 @app.route('/addFavoriteTeam', methods=['POST'])
 def add_favorite_team():
+    
     if 'username' not in session:
         return jsonify({'success': False, 'message': 'User not logged in'})
 
@@ -84,7 +85,7 @@ def add_favorite_team():
 def add_favorite_player():
     if 'username' not in session:
         return jsonify({'success': False, 'message': 'User not logged in'})
-
+    
     first_name = request.json['firstName']
     last_name = request.json['lastName']
     user_name = session['username']
@@ -185,6 +186,117 @@ def get_player_data():
     cursor.close()
     conn.close()
     return jsonify(players)
+
+
+
+@app.route('/data/favteams')
+def get_fav_team_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    username = session['username']
+    cursor.execute("EXEC GetFavTeamNames @Username = ?", username)
+    teams = [str(row[0]) for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(teams)
+
+@app.route('/data/favplayers')
+def get_fav_player_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    username = session['username']
+    cursor.execute("EXEC GetFavPlayerNames @Username = ?", username)
+    players = [f"{row[0]} {row[1]}" for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return jsonify(players)
+
+@app.route('/deleteFavoritePlayer', methods=['POST'])
+@login_required
+def delete_favorite_player():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
+    data = request.json
+    first_name = data['firstName']
+    last_name = data['lastName']
+    user_name = session['username']
+    
+    cnxn = get_db_connection()
+    cursor = cnxn.cursor()
+    try:
+        cursor.execute("EXEC DeleteFavoritePlayer @PlayerFName = ?, @PlayerLName = ?, @UserName = ?", first_name, last_name, user_name)
+        cnxn.commit()
+        return jsonify({'success': True, 'message': 'Player deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error deleting player', 'error': str(e)})
+    finally:
+        cursor.close()
+
+@app.route('/data/get_player_stats', methods=['POST'])
+def get_fav_player_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    data = request.json
+    players = data['favplayers']  # Expecting a list of players
+    results = []
+
+    for player_name in players:
+        fullname = player_name.split(" ")
+        firstname = fullname[0]
+        lastname = fullname[1]
+
+        try:
+            cursor.execute("EXEC FindAllPlayerStats @First = ?, @Last = ?", firstname, lastname)
+            player_stats = cursor.fetchall()
+
+            # Assuming 'player_stats' is a list of tuples, each representing a player's stat row
+            for stat in player_stats:
+                # Example: Assuming 'stat' includes points, assists, etc., in known positions
+                results.append({
+                    "first_name": firstname,
+                    "last_name": lastname,
+                    "points": stat[2],  # Adjust these indices based on your actual stat positions
+                    "assists": stat[3],
+                    "rebounds": stat[4],
+                    "blocks": stat[5],
+                    "steals": stat[6],
+                })
+        except Exception as e:
+            print(f"An error occurred while fetching stats for {firstname} {lastname}: {e}")
+            # Handle error (maybe append an error message or skip)
+    
+    cursor.close()
+    conn.close()
+    return jsonify(results)
+               
+# @app.route('/data/get_player_stats', methods=['POST'])
+# def get_fav_player_stats():
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
+#     data = request.json
+#     # print("look here")
+#     # print(data)
+#     players = data['favplayers']  # Expecting a list of players
+#     results = []
+#     # print("right here is players")
+#     # print(players)
+#     for ps in players:
+#         fullname = ps.split(" ")
+#         firstname = fullname[0]
+#         lastname = fullname[1]
+#         print("this is the first name")
+#         # print(firstname)
+
+#         player_result = {
+#             cursor.execute("EXEC FindAllPlayerStats @First = ?, @Last = ?", firstname, lastname)
+#             }
+#         playerResults = cursor.fetchall()
+#         print("player results")
+#         print(results)
+        
+#         results.append(playerResults)
+#     return jsonify(results)
 
 @app.route('/picks')
 @login_required
