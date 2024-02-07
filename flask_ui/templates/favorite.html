@@ -14,6 +14,12 @@
 
 </head>
 <style>
+
+.content-wrapper {
+        max-width: 600px; /* Adjust as needed for desired width */
+        margin: auto;
+        padding: 20px;
+    }
     /* Existing styles and new styles for top buttons */
     .nav-button {
         background-color: #007bff;
@@ -51,9 +57,24 @@
     /* ... any other styles you want to add or modify ... */
 </style>
 <body>
-    <a href="/" class="nav-button">Back to Home</a>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/" class="nav-button">Home</a></li>
+            <li><a href="/picks" class="nav-button">My Picks</a></li>
+            <li><a href="/parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/favorite" class="nav-button">Favorites</a></li>
+            <li><a href="/logout" class="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    
+    <!-- <a href="/" class="nav-button">Back to Home</a> -->
+    <div class="content-wrapper">
     <br>
     <br>
+    <section>
     <div id="popup" class="popup">
         <div class="popup-content">
             <form id="favoriteTeamForm">
@@ -68,6 +89,7 @@
                 <button type="submit">Add Favorite Player</button>
             </form>
         </div>
+    </section>
 
         <div class="popup-content">
             <form id="deleteTeamForm">
@@ -83,6 +105,7 @@
             </form>
         </div>
     </div>
+</div>
 
     <script>
         $(document).ready(function(){
