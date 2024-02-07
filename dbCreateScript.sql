@@ -50,7 +50,7 @@ CREATE TABLE Pick (
 	Team_ID INT,
 	Player_ID INT,
 	Guess_Stat VARCHAR(255) NOT NULL,
-	Game_ID INT NOT NULL,
+	Team_Against_ID INT NOT NULL,
 	PRIMARY KEY (ID)
 );
 
@@ -140,7 +140,7 @@ Foreign Key([Away Team ID]) References [Team](ID);
 ALTER TABLE Pick
 	ADD FOREIGN KEY (Team_ID) REFERENCES Team(ID),
 		FOREIGN KEY (Player_ID) REFERENCES Player(ID),
-		FOREIGN KEY (Game_ID) REFERENCES Game(ID);
+		FOREIGN KEY (Team_Against_ID) REFERENCES Team(ID);
 
 ALTER TABLE UserPick
 	ADD FOREIGN KEY (User_ID) REFERENCES [User](Username),

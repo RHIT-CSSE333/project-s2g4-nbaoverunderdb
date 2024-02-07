@@ -358,22 +358,115 @@ def get_fav_team_stats():
 @app.route('/picks')
 @login_required
 def view_picks():
-    # Fetch picks data from your database or data source
-    # For demonstration, using a static list of picks
-    picks = [
-        # {'player': 'LeBron James', 'team': 'Lakers', 'playingAgainst': 'Warriors', 'overUnder': 'Over', 'baseline': 25}, use this format
-        # Add more picks as needed
-    ]
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC dbo.GetPickDataByUsername @Username=?", username)
+        picks_data = cursor.fetchall()
+
+        picks = []
+        for row in picks_data:
+            picks.append({
+                'player': f"{row.PlayerFirstName} {row.PlayerLastName}",  # Combining first and last names
+                'team': row.TeamName,
+                'playingAgainst': row.TeamAgainstName,
+                'overUnder': 'Over' if row.Prediction == 1 else 'Under',  # Assuming 1 for Over, 0 for Under
+                'baseline': row.Guess_Stat,  # Assuming 'Guess_Stat' column exists in your picks data
+            })
+
+    except Exception as e:
+        print(f"Error fetching picks: {e}")
+        picks = []  # Return an empty list in case of error
+
+    finally:
+        cursor.close()
+        conn.close()
+
     return render_template('picks.html', picks=picks)
+
+@app.route('/parlays')
+@login_required
+def view_parlays():
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC dbo.GetPickDataByUsername @Username=?", username)
+        picks_data = cursor.fetchall()
+
+        picks = []
+        for row in picks_data:
+            picks.append({
+                'player': f"{row.PlayerFirstName} {row.PlayerLastName}",  # Combining first and last names
+                'team': row.TeamName,
+                'playingAgainst': row.TeamAgainstName,
+                'overUnder': 'Over' if row.Prediction == 1 else 'Under',  # Assuming 1 for Over, 0 for Under
+                'baseline': row.Guess_Stat,  # Assuming 'Guess_Stat' column exists in your picks data
+            })
+
+    except Exception as e:
+        print(f"Error fetching picks: {e}")
+        picks = []  # Return an empty list in case of error
+
+    finally:
+        cursor.close()
+        conn.close()
+        
+
+    return render_template('parlays.html', picks=picks)
 
 @app.route('/save-pick', methods=['POST'])
 def save_pick():
     data = request.json
-    # Implement logic to save the data to the database
-    # For example:
-    # save_to_database(data)
-    success = True  # Set to False if saving fails
-    return jsonify({'success': success})
+    try:
+        conn = get_db_connection()  # Ensure this function returns a valid connection
+        cursor = conn.cursor()
+
+        prediction = 1 if "over" in data["prediction"].lower() else 0
+        first = last = None
+        if data.get("player"):
+            name = data["player"].split(" ")
+            first = name[0]
+            last = name[1] if len(name) > 1 else None
+
+        team_name = data.get('team')
+        team_against_name = data['playingAgainst']
+        guess_stat = data['statistic']
+
+        # Execute stored procedure without attempting to capture output parameter
+        cursor.execute("""
+            EXEC dbo.AddPick 
+                @Prediction=?, 
+                @Team_Name=?, 
+                @Player_First_Name=?, 
+                @Player_Last_Name=?, 
+                @Guess_Stat=?, 
+                @Team_Against_Name=?;
+        """, (prediction, team_name, first, last, guess_stat, team_against_name))
+
+        # Optionally, fetch the last identity value inserted if needed
+        cursor.execute("SELECT @@IDENTITY;")
+        pick_id = cursor.fetchval()
+        username = session['username']
+
+        cursor.execute("""
+        EXEC dbo.AddUserPick
+            @Username=?,
+            @PickID=?
+            """, (username, pick_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/execute-script', methods=['POST'])
 def execute_script():
