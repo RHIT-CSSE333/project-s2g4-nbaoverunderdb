@@ -233,6 +233,8 @@ def delete_favorite_player():
     finally:
         cursor.close()
 
+
+
 @app.route('/data/get_player_stats', methods=['POST'])
 def get_fav_player_stats():
     conn = get_db_connection()
@@ -264,6 +266,61 @@ def get_fav_player_stats():
                 })
         except Exception as e:
             print(f"An error occurred while fetching stats for {firstname} {lastname}: {e}")
+            # Handle error (maybe append an error message or skip)
+    
+    cursor.close()
+    conn.close()
+    return jsonify(results)
+
+@app.route('/deleteFavoriteTeam', methods=['POST'])
+@login_required
+def delete_favorite_team():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
+    data = request.json
+    team_name = data['teamName']
+    user_name = session['username']
+    
+    cnxn = get_db_connection()
+    cursor = cnxn.cursor()
+    try:
+        print("here running well")
+        cursor.execute("EXEC DeleteFavoriteTeam @TeamName = ?, @UserName = ?", team_name, user_name)
+        cnxn.commit()
+        return jsonify({'success': True, 'message': 'Team deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error deleting player', 'error': str(e)})
+    finally:
+        cursor.close()
+
+
+@app.route('/data/get_team_stats', methods=['POST'])
+def get_fav_team_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    data = request.json
+    teams = data['favteams']  # Expecting a list of players
+    results = []
+
+    for team_name in teams:
+        # fullname = player_name.split(" ")
+        # firstname = fullname[0]
+        # lastname = fullname[1]
+
+        try:
+            cursor.execute("EXEC FindAllTeamStats @Name = ?", team_name)
+            team_stats = cursor.fetchall()
+
+            # Assuming 'player_stats' is a list of tuples, each representing a player's stat row
+            for stat in team_stats:
+                # Example: Assuming 'stat' includes points, assists, etc., in known positions
+                results.append({
+                    "name": team_name,
+                    "points": stat[1],  # Adjust these indices based on your actual stat positions
+                })
+        except Exception as e:
+            print(f"An error occurred while fetching stats for {team_name} : {e}")
             # Handle error (maybe append an error message or skip)
     
     cursor.close()

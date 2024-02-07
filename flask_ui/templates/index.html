@@ -96,6 +96,27 @@
         </article>
         </div>
     </section>
+
+    <section>
+        
+        <div class="container">
+            <article>
+        <h3>Favorite Team Statistics</h3>
+        <div id="displayFavTeamStats">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Team</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </article>
+        </div>
+    </section>
     
     <section id="predictor" aria-label="Predictor">
         <div class="container">
@@ -229,6 +250,7 @@
                 .catch(error => console.error('Error:', error));
             });
             fetchFavoritePlayerStats();
+            fetchFavoriteTeamStats();
 
             function fetchFavoritePlayerStats() {
                 
@@ -269,7 +291,6 @@
         function updateFavPlayerStats(data) {
             const tableBody = document.querySelector('#displayFavPlayerStats table tbody');
             tableBody.innerHTML = ''; // Clear existing rows
-            console.log(data)
             data.forEach(player => {
                 const row = `<tr>
                     <td>${player.first_name} ${player.last_name}</td>
@@ -278,6 +299,55 @@
                     <td>${player.rebounds}</td>
                     <td>${player.blocks}</td>
                     <td>${player.steals}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function fetchFavoriteTeamStats() {
+                
+                fetch('/data/favteams')
+                
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                console.log(data)
+                // Assuming 'data' is an array of player names
+                data.forEach(teamName => {
+                    if (!favteams.includes(teamName)) favteams.push(teamName);
+                    fetch('/data/get_team_stats', {
+                    
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Adjust this body to match the expected format of your endpoint
+                
+                body: JSON.stringify({favteams: favteams})
+                
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                updateFavTeamStats(data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+                });
+            })
+            .catch(error => console.error('Error loading players:', error));
+            
+            
+        }
+
+        function updateFavTeamStats(data) {
+            const tableBody = document.querySelector('#displayFavTeamStats table tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            console.log(data)
+            data.forEach(team => {
+                const row = `<tr>
+                    <td>${team.name}</td>
+                    <td>${team.points}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
             });
