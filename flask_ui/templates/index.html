@@ -80,9 +80,12 @@
                     <h3>Enter Player Details</h3>
                 </hgroup>
                 <form class="grid">
-                    <input type="text" id="player" name="player" placeholder="Player Name" aria-label="Player Name" required />
+                    <select id="playerTeam" name="playerTeam" aria-label="playerTeam" required onchange="updateContent()">
+                        <option value="Player">Player</option>
+                        <option value="Team">Team</option>
+                    </select>             
+                    <input type="text" id="player" name="player" placeholder="Player/Team Name" aria-label="Player Name" required />
                     <select id="homeAway" name="homeAway" aria-label="homeAway" required>
-                        <option value="">Home/Away</option>
                         <option value="Home">Home</option>
                         <option value="Away">Away</option>
                     </select>                   
@@ -177,6 +180,40 @@
 
         });
 
+        function updateContent() {
+            var selectedValue = document.getElementById('playerTeam').value;
+            const players = [];
+            if(selectedValue === 'Player') {
+                fetch('/data/players')
+                .then(response => response.json()) // Parse the JSON from the response
+                .then(data => {
+                    // Assuming 'data' is an array of player names
+                    data.forEach(playerName => {
+                        if (!players.includes(playerName)) players.push(playerName);
+                    });
+                })
+                .catch(error => console.error('Error loading players:', error));
+            } else {
+                const teams = [];
+                fetch('/data/teams')
+                .then(response => response.json()) // Parse the JSON from the response
+                .then(data => {
+                    // Assuming 'data' is an array of player names
+                    data.forEach(playerName => {
+                        if (!players.includes(playerName)) players.push(playerName);
+                    });
+                })
+                .catch(error => console.error('Error loading players:', error));
+                $("#player").autocomplete({
+                    source: players
+                });
+            }
+
+            $("#player").autocomplete({
+                    source: players
+                });
+        }
+
         $(document).ready(function() {
     // ... existing code ...
 
@@ -188,12 +225,18 @@
     });
 
     document.getElementById('saveButton').addEventListener('click', function() {
+        player = null;
+        team = null;
+        if (document.getElementById('playerTeam').value === 'Player') {
+            player = document.getElementById('player').value
+        } else {
+            team = document.getElementById('player').value
+        }
         const dataToSave = {
-            player: document.getElementById('player').value,
-            homeAway: document.getElementById('homeAway').value,
+            player: player,
+            team: team, 
             playingAgainst: document.getElementById('playingAgainst').value,
-            statistic: document.getElementById('statistic').value,
-            baseline: document.getElementById('baseline').value,
+            statistic: document.getElementById('baseline').value + " " + document.getElementById('statistic').value,
             prediction: document.getElementById('predictionResult').textContent
         };
 

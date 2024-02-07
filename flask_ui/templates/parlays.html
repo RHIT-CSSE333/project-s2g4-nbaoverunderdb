@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <title>NBA Stat Predictor - My Parlays</title>
+    <style>
+        /* Your existing styles */
+    </style>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor - Parlays</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/" class="nav-button">Home</a></li>
+            <li><a href="/picks" class="nav-button">My Picks</a></li>
+            <li><a href="/parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/favorite" class="nav-button">Favorites</a></li>
+            <li><a href="/logout" class="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    
+    <main class="container">
+        <h1>Create a New Parlay</h1>
+        <form id="parlayForm">
+            <label for="betAmount">Bet Amount:</label>
+            <input type="number" id="betAmount" name="betAmount" required><br><br>
+            
+            <label for="payoutAmount">Payout:</label>
+            <input type="number" id="payoutAmount" name="payoutAmount" required><br><br>
+            
+            <button type="button" onclick="togglePicks()">Toggle Picks</button>
+            <div id="picksContainer" class="hide">
+                <h3>Select Picks for Parlay</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Player</th>
+                            <th>Team</th>
+                            <th>Playing Against</th>
+                            <th>Over/Under</th>
+                            <th>Baseline</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pick in picks %}
+                            <tr>
+                                <td><input type="checkbox" name="selectedPicks" value="{{ pick.id }}"></td>
+                                <td>{{ pick.player }}</td>
+                                <td>{{ pick.team }}</td>
+                                <td>{{ pick.playingAgainst }}</td>
+                                <td>{{ pick.overUnder }}</td>
+                                <td>{{ pick.baseline }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div><br><br>
+            
+            <button type="button" onclick="createParlay()">Create Parlay</button>
+        </form>
+    </main>
+
+    <footer class="container">
+        <!-- Footer content as in your template -->
+    </footer>
+
+    <script>
+        function togglePicks() {
+            $("#picksContainer").toggleClass("hide");
+        }
+
+        function createParlay() {
+            const betAmount = $("#betAmount").val();
+            const payoutAmount = $("#payoutAmount").val();
+            const selectedPicks = $("input[name='selectedPicks']:checked").map(function() {
+                return this.value;
+            }).get();
+
+            $.ajax({
+                type: "POST",
+                url: "/create-parlay", // Adjust the URL to your Flask route
+                data: JSON.stringify({ 
+                    betAmount: betAmount, 
+                    payoutAmount: payoutAmount, 
+                    picks: selectedPicks 
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(response) {
+                    // Handle success - perhaps redirect or display a success message
+                    console.log("Parlay created successfully", response);
+                },
+                error: function(error) {
+                    // Handle error
+                    console.log("Error creating parlay", error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
