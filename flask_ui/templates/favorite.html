@@ -14,6 +14,12 @@
 
 </head>
 <style>
+
+.content-wrapper {
+        max-width: 600px; /* Adjust as needed for desired width */
+        margin: auto;
+        padding: 20px;
+    }
     /* Existing styles and new styles for top buttons */
     .nav-button {
         background-color: #007bff;
@@ -51,9 +57,24 @@
     /* ... any other styles you want to add or modify ... */
 </style>
 <body>
-    <a href="/" class="nav-button">Back to Home</a>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/" class="nav-button">Home</a></li>
+            <li><a href="/picks" class="nav-button">My Picks</a></li>
+            <li><a href="/parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/favorite" class="nav-button">Favorites</a></li>
+            <li><a href="/logout" class="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+    
+    <!-- <a href="/" class="nav-button">Back to Home</a> -->
+    <div class="content-wrapper">
     <br>
     <br>
+    <section>
     <div id="popup" class="popup">
         <div class="popup-content">
             <form id="favoriteTeamForm">
@@ -68,6 +89,14 @@
                 <button type="submit">Add Favorite Player</button>
             </form>
         </div>
+    </section>
+
+        <div class="popup-content">
+            <form id="deleteTeamForm">
+                <input type="text" id="teamDelete" placeholder="Team Name" required>
+                <button type="submit">Delete Favorite Team</button>
+            </form>
+        </div>
 
         <div class="popup-content">
             <form id="deletePlayerForm">
@@ -76,6 +105,7 @@
             </form>
         </div>
     </div>
+</div>
 
     <script>
         $(document).ready(function(){
@@ -99,7 +129,6 @@
                 });
             })
 
-
             $("#player").autocomplete({
                 source: players
             });
@@ -110,6 +139,10 @@
 
             $("#playerDelete").autocomplete({
                 source: players
+            });
+
+            $("#teamDelete").autocomplete({
+                source: teams
             });
         
         });
@@ -122,6 +155,12 @@
     let lastName = fullName[1] || ''; // Default to empty string if lastName is not provided
     deleteFavoritePlayer('/deleteFavoritePlayer', { firstName, lastName });
 });
+
+document.getElementById('deleteTeamForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let teamName = document.getElementById('teamDelete').value; // Correctly capture the teamName
+        deleteFavoriteTeam('/deleteFavoriteTeam', { teamName }); // Correctly call the delete function
+    });
 
 function deleteFavoritePlayer(url, data) {
     fetch(url, {
@@ -136,6 +175,28 @@ function deleteFavoritePlayer(url, data) {
         console.log('Success:', data);
         if (data.success) {
             // Update the UI or notify the user
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+function deleteFavoriteTeam(url, data) {
+    fetch(url, {
+        method: 'POST', // Use POST to match your Flask route
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        if (data.success) {
             alert(data.message);
         } else {
             alert('Error: ' + data.message);
