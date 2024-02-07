@@ -7,7 +7,11 @@
     <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
-   
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+
 </head>
 <style>
     /* Existing styles and new styles for top buttons */
@@ -60,14 +64,89 @@
 
         <div class="popup-content">
             <form id="favoritePlayerForm">
-                <input type="text" id="firstName" placeholder="First Name" required>
-                <input type="text" id="lastName" placeholder="Last Name" required>
+                <input type="text" id="player" placeholder="Player Name" required>
                 <button type="submit">Add Favorite Player</button>
+            </form>
+        </div>
+
+        <div class="popup-content">
+            <form id="deletePlayerForm">
+                <input type="text" id="playerDelete" placeholder="Player Name" required>
+                <button type="submit">Delete Favorite Player</button>
             </form>
         </div>
     </div>
 
     <script>
+        $(document).ready(function(){
+            const teams = [];
+            const players = [];
+            fetch('/data/teams')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of team names
+                data.forEach(teamName => {
+                    if (!teams.includes(teamName)) teams.push(teamName);
+                });
+            })
+            .catch(error => console.error('Error loading teams:', error));
+            fetch('/data/players')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(playerName => {
+                    if (!players.includes(playerName)) players.push(playerName);
+                });
+            })
+
+
+            $("#player").autocomplete({
+                source: players
+            });
+        
+            $("#teamName").autocomplete({
+                source: teams
+            });
+
+            $("#playerDelete").autocomplete({
+                source: players
+            });
+        
+        });
+
+        document.getElementById('deletePlayerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Assuming the player's name is entered as "FirstName LastName"
+    let fullName = document.getElementById('playerDelete').value.split(" ");
+    let firstName = fullName[0];
+    let lastName = fullName[1] || ''; // Default to empty string if lastName is not provided
+    deleteFavoritePlayer('/deleteFavoritePlayer', { firstName, lastName });
+});
+
+function deleteFavoritePlayer(url, data) {
+    fetch(url, {
+        method: 'POST', // Use POST to match your Flask route
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        if (data.success) {
+            // Update the UI or notify the user
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+
         document.getElementById('favoriteTeamForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var teamName = document.getElementById('teamName').value;
@@ -76,10 +155,13 @@
     
         document.getElementById('favoritePlayerForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            var firstName = document.getElementById('firstName').value;
-            var lastName = document.getElementById('lastName').value;
-            submitData('/addFavoritePlayer', { firstName, lastName});
+            let name = document.getElementById('player').value;
+            const names =name.split(" ");
+            let firstName = names[0];
+            let lastName = names[1];
+            submitData('/addFavoritePlayer', {firstName, lastName});
         });
+        
     
         function submitData(url, data) {
             fetch(url, {
