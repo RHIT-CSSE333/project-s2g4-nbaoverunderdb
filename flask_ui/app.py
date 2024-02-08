@@ -329,9 +329,43 @@ def view_picks():
 
     return render_template('picks.html', picks=picks)
 
-@app.route('/parlays')
+@app.route('/view-parlays')
 @login_required
 def view_parlays():
+    parlays = []
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC dbo.GetUserParlayDetails @Username=?", (username,))
+        current_parlay_id = None
+        columns = [column[0] for column in cursor.description]  # Get column names
+        for row in cursor:
+            row_dict = dict(zip(columns, row))
+            if row_dict['ParlayID'] != current_parlay_id:
+                current_parlay_id = row_dict['ParlayID']
+                parlays.append({
+                    'ParlayID': row_dict['ParlayID'],
+                    'Bet': row_dict['Bet'],
+                    'Payout': row_dict['Payout'],
+                    'Picks': []
+                })
+            parlays[-1]['Picks'].append({
+                'PlayerName': row_dict['PlayerName'],
+                'Team': row_dict['Team'],
+                'OpposingTeam': row_dict['OpposingTeam'],
+                'Prediction': 'Over' if row_dict["Prediction"] == 1 else 'Under',
+                'Guess_Stat': row_dict['Guess_Stat']
+            })
+    except Exception as e:
+        print(f"Error fetching parlay details: {e}")
+        parlays = []  # Return an empty list in case of error
+    return render_template('view-parlays.html', parlays=parlays)
+
+@app.route('/parlays')
+@login_required
+def creat_parlay_view():
     username = session['username']
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -348,6 +382,7 @@ def view_parlays():
                 'playingAgainst': row.TeamAgainstName,
                 'overUnder': 'Over' if row.Prediction == 1 else 'Under',  # Assuming 1 for Over, 0 for Under
                 'baseline': row.Guess_Stat,  # Assuming 'Guess_Stat' column exists in your picks data
+                'id': row.id
             })
 
     except Exception as e:
@@ -360,6 +395,42 @@ def view_parlays():
         
 
     return render_template('parlays.html', picks=picks)
+
+@app.route('/create-parlay', methods=['POST'])
+def create_parlay():
+    data = request.json
+    bet_amount = data.get('betAmount')
+    payout_amount = data.get('payoutAmount')
+    selected_picks = data.get('picks')  # List of Pick IDs
+    try: 
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Execute AddParlay stored procedure
+        cursor.execute("EXEC dbo.AddParlay @Bet=?, @Payout=?", (bet_amount, payout_amount))
+        cursor.execute("SELECT @@IDENTITY;")
+        parlay_id = cursor.fetchval()
+        username = session['username']
+
+        # For each pick, associate it with the created parlay
+        for pick_id in selected_picks:
+            cursor.execute("EXEC dbo.PickisInParlay @PickID=?, @ParlayID=?", (pick_id, parlay_id))
+
+        cursor.execute("""
+        EXEC dbo.AddUserParlay
+            @Username=?,
+            @ParlayID=?
+            """, (username, parlay_id))
+
+        conn.commit()  # Commit the transaction
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+    finally:
+        cursor.close()
+        conn.close()
 
 @app.route('/save-pick', methods=['POST'])
 def save_pick():

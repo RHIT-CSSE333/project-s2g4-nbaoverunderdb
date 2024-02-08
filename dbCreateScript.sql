@@ -16,12 +16,12 @@
 USE NBAOverUnderDB;
 GO
 
-Create Table [Game](
-ID int IDENTITY(0,1),
-[Home Team ID] int,
-[Away Team ID] int,
-Primary Key(ID)
-)
+-- Create Table [Game](
+-- ID int IDENTITY(0,1),
+-- [Home Team ID] int,
+-- [Away Team ID] int,
+-- Primary Key(ID)
+-- )
 
 Create Table [User](
 Username nvarchar(255),
@@ -95,15 +95,15 @@ CREATE TABLE PicksInParlay (
 );
 
 
-CREATE TABLE GameStats (
-	StatsID INT NOT NULL,
-	GameID INT NOT NULL,
-	PlayerID INT NOT NULL, 
-	PRIMARY KEY (StatsID, GameID, PlayerID),
-	FOREIGN KEY (StatsID) REFERENCES [Statistics](ID),
-	FOREIGN KEY (GameID) REFERENCES Game(ID),
-	FOREIGN KEY (PlayerID) REFERENCES Player(ID)
-);
+-- CREATE TABLE GameStats (
+-- 	StatsID INT NOT NULL,
+-- 	GameID INT NOT NULL,
+-- 	PlayerID INT NOT NULL, 
+-- 	PRIMARY KEY (StatsID, GameID, PlayerID),
+-- 	FOREIGN KEY (StatsID) REFERENCES [Statistics](ID),
+-- 	FOREIGN KEY (GameID) REFERENCES Game(ID),
+-- 	FOREIGN KEY (PlayerID) REFERENCES Player(ID)
+-- );
 
  
 Create Table [Favorite Player](
@@ -133,9 +133,9 @@ ADD FOREIGN KEY ([User Username]) References [User](Username),
  
 
  
-Alter table [Game]
-Add Foreign Key([Home Team ID]) References [Team](ID),
-Foreign Key([Away Team ID]) References [Team](ID);
+-- Alter table [Game]
+-- Add Foreign Key([Home Team ID]) References [Team](ID),
+-- Foreign Key([Away Team ID]) References [Team](ID);
 
 ALTER TABLE Pick
 	ADD FOREIGN KEY (Team_ID) REFERENCES Team(ID),

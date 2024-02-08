@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>View Parlays</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Main Page Styles */
+        .nav-button, .logout-button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+        }
+
+        .nav-button:hover, .logout-button:hover {
+            background-color: white;
+            color: #007bff;
+            border: 1px solid #007bff;
+        }
+
+        .logout-button {
+            background-color: #f44336;
+        }
+
+        .logout-button:hover {
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+
+        /* Styles for Parlay Details */
+        .parlay {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .parlay-header {
+            cursor: pointer;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            font-weight: bold;
+        }
+
+        .parlay-details {
+            display: none;
+            padding: 15px;
+        }
+
+        .parlay-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .parlay-details th, .parlay-details td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .parlay-details th {
+            background-color: #333;
+            color: white;
+        }
+
+        .parlay-details tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        /* Floating Button Style */
+        .float-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .float-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+    </style>
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><strong>NBA Stat Predictor</strong></li>
+        </ul>
+        <ul>
+            <li><a href="/" class="nav-button">Home</a></li>
+            <li><a href="/picks" class="nav-button">My Picks</a></li>
+            <li><a href="/view-parlays" class="nav-button">My Parlays</a></li>
+            <li><a href="/favorite" class="nav-button">Favorites</a></li>
+            <li><a href="/logout" class="logout-button">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <h1>View Parlays</h1>
+        <div id="parlaysContainer">
+            {% for parlay in parlays %}
+            <div class="parlay">
+                <div class="parlay-header">Bet: ${{ parlay.Bet }} - Payout: ${{ parlay.Payout }} - Picks: {{ parlay.Picks|length }}</div>
+                <div class="parlay-details">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>Playing Against</th>
+                                <th>Over/Under</th>
+                                <th>Baseline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pick in parlay.Picks %}
+                            <tr>
+                                <td>{{ pick.PlayerName }}</td>
+                                <td>{{ pick.Team }}</td>
+                                <td>{{ pick.OpposingTeam }}</td>
+                                <td>{{ pick.Prediction }}</td>
+                                <td>{{ pick.Guess_Stat }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="/parlays" class="float-button">Create Parlays</a>
+    </main>
+
+    <script>
+        $(document).ready(function() {
+            $('.parlay-header').click(function() {
+                $(this).next('.parlay-details').slideToggle('fast');
+            });
+        });
+    </script>
+</body>
+</html>
