@@ -233,6 +233,8 @@ def delete_favorite_player():
     finally:
         cursor.close()
 
+
+
 @app.route('/data/get_player_stats', methods=['POST'])
 def get_fav_player_stats():
     conn = get_db_connection()
@@ -264,6 +266,61 @@ def get_fav_player_stats():
                 })
         except Exception as e:
             print(f"An error occurred while fetching stats for {firstname} {lastname}: {e}")
+            # Handle error (maybe append an error message or skip)
+    
+    cursor.close()
+    conn.close()
+    return jsonify(results)
+
+@app.route('/deleteFavoriteTeam', methods=['POST'])
+@login_required
+def delete_favorite_team():
+    if 'username' not in session:
+        return jsonify({'success': False, 'message': 'User not logged in'})
+
+    data = request.json
+    team_name = data['teamName']
+    user_name = session['username']
+    
+    cnxn = get_db_connection()
+    cursor = cnxn.cursor()
+    try:
+        print("here running well")
+        cursor.execute("EXEC DeleteFavoriteTeam @TeamName = ?, @UserName = ?", team_name, user_name)
+        cnxn.commit()
+        return jsonify({'success': True, 'message': 'Team deleted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Error deleting player', 'error': str(e)})
+    finally:
+        cursor.close()
+
+
+@app.route('/data/get_team_stats', methods=['POST'])
+def get_fav_team_stats():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    data = request.json
+    teams = data['favteams']  # Expecting a list of players
+    results = []
+
+    for team_name in teams:
+        # fullname = player_name.split(" ")
+        # firstname = fullname[0]
+        # lastname = fullname[1]
+
+        try:
+            cursor.execute("EXEC FindAllTeamStats @Name = ?", team_name)
+            team_stats = cursor.fetchall()
+
+            # Assuming 'player_stats' is a list of tuples, each representing a player's stat row
+            for stat in team_stats:
+                # Example: Assuming 'stat' includes points, assists, etc., in known positions
+                results.append({
+                    "name": team_name,
+                    "points": stat[1],  # Adjust these indices based on your actual stat positions
+                })
+        except Exception as e:
+            print(f"An error occurred while fetching stats for {team_name} : {e}")
             # Handle error (maybe append an error message or skip)
     
     cursor.close()
@@ -311,8 +368,11 @@ def view_picks():
 
         picks = []
         for row in picks_data:
+            playerName = None
+            if(row.PlayerFirstName != None or row.PlayerLastName != None):
+                playerName = f"{row.PlayerFirstName} {row.PlayerLastName}"
             picks.append({
-                'player': f"{row.PlayerFirstName} {row.PlayerLastName}",  # Combining first and last names
+                'player': playerName,  # Combining first and last names
                 'team': row.TeamName,
                 'playingAgainst': row.TeamAgainstName,
                 'overUnder': 'Over' if row.Prediction == 1 else 'Under',  # Assuming 1 for Over, 0 for Under
@@ -486,6 +546,7 @@ def save_pick():
 def execute_script():
     # Extract data from the request
     data = request.json
+    playerTeam = data.get('playerTeam')
     player = data.get('player')
     homeAway = data.get('homeAway')
     playingAgainst = data.get('playingAgainst')
@@ -493,7 +554,7 @@ def execute_script():
     baseline = float(data.get('baseline'))
 
     # Your prediction logic here using the extracted data
-    prediction = run_prediction(player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
+    prediction = run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
 
     if prediction:
         if float(prediction) > baseline:
@@ -505,21 +566,32 @@ def execute_script():
 
     return jsonify({'result': prediction})
 
-def run_prediction(player, homeAway, playingAgainst, stat, baseline):
-    print('Running prediction...')
+def run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline):
+    if playerTeam == 'Player': # predict player
+        print('Running player prediction...')
+        # Split the player name into first and last name
+        first_name, last_name = player.split(' ', 1)
 
-    # Split the player name into first and last name
-    first_name, last_name = player.split(' ', 1)
+        # Call the stored procedure and get the stat
+        player_stat = call_find_player_stat(first_name, last_name, stat)
 
-    # Call the stored procedure and get the stat
-    player_stat = call_find_player_stat(first_name, last_name, stat)
+        if player_stat is None:
+            print("No stat found for player:", player)
+            return False
+        else:
+            print(f"{stat} for {player}: {player_stat[0][0]}")
+            return player_stat[0][0]
+    else: # predict team
+        print('Running team prediction...')
+        # Call the stored procedure and get the stat
+        team_stat = call_find_team_stat(player)
 
-    if player_stat is None:
-        print("No stat found for player:", player)
-        return False
-    else:
-        print(f"{stat} for {player}: {player_stat[0][0]}")
-        return player_stat[0][0]
+        if team_stat is None:
+            print("No stat found for team:", player)
+            return False
+        else:
+            print(f"{stat} for {player}: {team_stat[0][0]}")
+            return team_stat[0][0]
 
 
 
@@ -537,6 +609,32 @@ def call_find_player_stat(first_name, last_name, stat):
     try:
         # Calling the stored procedure
         cursor.execute("EXEC dbo.FindPlayerStat ?, ?, ?", first_name, last_name, stat)
+        result = cursor.fetchall()
+
+    except Exception as e:  # Catches any exception and stores it in variable 'e'
+        print("An error occurred:", e)
+        result = None
+
+    finally:
+        cursor.close()  # Ensure the cursor is closed regardless of success or failure
+
+    # You can now use the 'result' variable outside the try-except block
+    return result
+
+def call_find_team_stat(team_name):
+    # Database connection parameters
+    server = 'golem.csse.rose-hulman.edu'
+    database = 'NBAOverUnderDB'
+    username = 'nbaoverunderuser'
+    password = 'NBAPassword123'
+    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
+                          server + ';DATABASE=' + database + ';UID=' +
+                          username + ';PWD=' + password)
+
+    cursor = cnxn.cursor()
+    try:
+        # Calling the stored procedure
+        cursor.execute("EXEC dbo.FindTeamStat ?", team_name)
         result = cursor.fetchall()
 
     except Exception as e:  # Catches any exception and stores it in variable 'e'
