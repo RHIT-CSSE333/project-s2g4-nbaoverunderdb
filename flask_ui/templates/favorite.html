@@ -111,6 +111,27 @@
         $(document).ready(function(){
             const teams = [];
             const players = [];
+            const favteams = [];
+            const favplayers = [];
+            fetch('/data/favplayers')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(playerName => {
+                    if (!favplayers.includes(playerName)) favplayers.push(playerName);
+                });
+            })
+            .catch(error => console.error('Error loading players:', error));
+            fetch('/data/favteams')
+            .then(response => response.json()) // Parse the JSON from the response
+            .then(data => {
+                // Assuming 'data' is an array of player names
+                data.forEach(teamName => {
+                    if (!favteams.includes(teamName)) favteams.push(teamName);
+                });
+            })
+            .catch(error => console.error('Error loading teams:', error));
+            
             fetch('/data/teams')
             .then(response => response.json()) // Parse the JSON from the response
             .then(data => {
@@ -138,12 +159,14 @@
             });
 
             $("#playerDelete").autocomplete({
-                source: players
+                source: favplayers
             });
 
             $("#teamDelete").autocomplete({
-                source: teams
+                source: favteams
             });
+        
+
         
         });
 
