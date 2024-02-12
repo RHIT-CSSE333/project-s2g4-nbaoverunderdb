@@ -3,6 +3,23 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import pyodbc
 import bcrypt
 import os
+from dotenv import load_dotenv
+import base64 
+load_dotenv()
+
+encoded_bytes = os.getenv('FLASK_Password').encode("ascii") 
+  
+decoded_bytes = base64.b64decode(encoded_bytes) 
+decoded_password = decoded_bytes.decode("ascii") 
+  
+
+config = {
+    "SERVER": os.getenv('FLASK_Server'),
+    "DATABASE_NAME": os.getenv('FLASK_DatabaseName'),
+    "USERNAME": os.getenv('FLASK_Username'),
+    "PASSWORD": decoded_password
+}
+
 secret_key = os.urandom(24)
 
 # Flask application setup
@@ -14,13 +31,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Database configuration
-config = {
-    'server': 'golem.csse.rose-hulman.edu',
-    'database': 'NBAOverUnderDB',
-    'username': 'nbaoverunderuser',
-    'password': 'NBAPassword123'
-}
 
 # User model for Flask-Login
 class User(UserMixin):
@@ -34,8 +44,8 @@ def load_user(username):
 def get_db_connection():
     return pyodbc.connect(
         'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
-        config['server'] + ';DATABASE=' + config['database'] + 
-        ';UID=' + config['username'] + ';PWD=' + config['password'])
+        config['SERVER'] + ';DATABASE=' + config['DATABASE_NAME'] + 
+        ';UID=' + config['USERNAME'] + ';PWD=' + config['PASSWORD'])
 
 def login_logic(username, password):
     try:
@@ -190,6 +200,7 @@ def get_player_data():
 
 
 @app.route('/data/favteams')
+@login_required
 def get_fav_team_data():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -201,6 +212,7 @@ def get_fav_team_data():
     return jsonify(teams)
 
 @app.route('/data/favplayers')
+@login_required
 def get_fav_player_data():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -389,6 +401,46 @@ def view_picks():
 
     return render_template('picks.html', picks=picks)
 
+@app.route('/update-parlay/<parlay_id>', methods=['POST'])
+@login_required
+def update_parlay(parlay_id):
+    data = request.json
+    bet = data.get('bet')
+    payout = data.get('payout')
+    # Update the parlay in your database here
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try: 
+        cursor.execute("EXEC dbo.UpdateParlay @Username=?, @ParlayID=?, @bet=?, @payout=?", username, parlay_id, bet, payout)
+        conn.commit()
+        return jsonify({'message': 'Parlay updated successfully', 'id': parlay_id, 'bet': bet, 'payout': payout})
+    except Exception as e:
+        print(f"Error updating parlay details: {e}")
+        return jsonify({'message': 'Could not update Parlay', 'id': parlay_id, 'bet': bet, 'payout': payout})
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/delete-parlay/<parlay_id>', methods=['POST'])
+@login_required
+def delete_parlay(parlay_id):
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC dbo.DeleteParlay @Username=?, @ParlayID=?", username, parlay_id)
+        conn.commit()
+        return jsonify({'message': 'Parlay deleted successfully', 'id': parlay_id})
+    except Exception as e:
+        return jsonify({'message': 'Could not delete Parlay', 'id': parlay_id,})
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
 @app.route('/view-parlays')
 @login_required
 def view_parlays():
@@ -398,7 +450,7 @@ def view_parlays():
     cursor = conn.cursor()
 
     try:
-        cursor.execute("EXEC dbo.GetUserParlayDetails @Username=?", (username,))
+        cursor.execute("EXEC dbo.GetUserParlayDetails @Username=?", username)
         current_parlay_id = None
         columns = [column[0] for column in cursor.description]  # Get column names
         for row in cursor:
@@ -597,13 +649,7 @@ def run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline)
 
 def call_find_player_stat(first_name, last_name, stat):
     # Database connection parameters
-    server = 'golem.csse.rose-hulman.edu'
-    database = 'NBAOverUnderDB'
-    username = 'nbaoverunderuser'
-    password = 'NBAPassword123'
-    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
-                          server + ';DATABASE=' + database + ';UID=' +
-                          username + ';PWD=' + password)
+    cnxn = get_db_connection();
 
     cursor = cnxn.cursor()
     try:
@@ -623,13 +669,7 @@ def call_find_player_stat(first_name, last_name, stat):
 
 def call_find_team_stat(team_name):
     # Database connection parameters
-    server = 'golem.csse.rose-hulman.edu'
-    database = 'NBAOverUnderDB'
-    username = 'nbaoverunderuser'
-    password = 'NBAPassword123'
-    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
-                          server + ';DATABASE=' + database + ';UID=' +
-                          username + ';PWD=' + password)
+    cnxn = get_db_connection()
 
     cursor = cnxn.cursor()
     try:
