@@ -7,13 +7,13 @@ const config = {
     user: 'nbaoverunderuser',
     password: 'NBAPassword123',
     server: 'golem.csse.rose-hulman.edu', // You can use 'localhost\\instance' to connect to named instance
-    database: 'NBAOverUnderDB',
+    database: 'NBAOverUnderDB2',
     options: {
         trustServerCertificate: true // This bypasses the SSL certificate validation
     }
 };
 
-async function addStats(pointsAvg) {
+async function addTeamStats(pointsAvg) {
     try {
         // Open database connection
         await sql.connect(config);
@@ -60,7 +60,7 @@ async function addTeam(TName, statsID) {
 
 //const processedPlayers = new Set(); // Set to track processed players
 
-async function processRow(row) {
+async function processTeamRow(row) {
     try {
         const TName = row['Team'];
         //const FName = PName[0];
@@ -75,7 +75,7 @@ async function processRow(row) {
 
         const ptsAvg = row['PTS'];
 
-        const statsID = await addStats(ptsAvg);
+        const statsID = await addTeamStats(ptsAvg);
 
         await addTeam(TName, statsID);
     } catch (err) {
@@ -91,7 +91,7 @@ async function processCsvFile(filePath) {
         .on('data', (row) => rows.push(row))
         .on('end', async () => {
             for (let row of rows) {
-                await processRow(row);
+                await processTeamRow(row);
             }
             console.log('CSV file processed successfully.');
         });

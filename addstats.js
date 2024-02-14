@@ -7,19 +7,29 @@ const config = {
     user: 'nbaoverunderuser',
     password: 'NBAPassword123',
     server: 'golem.csse.rose-hulman.edu', // You can use 'localhost\\instance' to connect to named instance
-    database: 'NBAOverUnderDB',
+    database: 'NBAOverUnderDB2',
     options: {
         trustServerCertificate: true // This bypasses the SSL certificate validation
     }
 };
 
+let pool = null; // Global variable to hold the connection pool
+
+async function getPool() {
+    if (pool) return pool; // Use existing pool if already created
+    pool = await sql.connect(config); // Create a new pool if one does not exist
+    return pool;
+}
+
 async function addStats(fName, lName, pointsAvg, reboundsAvg, blocksAvg, stealsAvg, assistsAvg) {
     try {
         // Open database connection
-        await sql.connect(config);
+        const pool = await getPool(); // Use the global connection pool
+        const request = pool.request();
+        // await sql.connect(config);
 
         // Set up the parameters
-        const request = new sql.Request();
+        // const request = new sql.Request();
         request.input('FName', sql.VarChar(255), fName);
         request.input('LName', sql.VarChar(255), lName);
         request.input('PointsAvg', sql.Decimal(5, 2), pointsAvg);
@@ -42,15 +52,46 @@ async function addStats(fName, lName, pointsAvg, reboundsAvg, blocksAvg, stealsA
         console.error('Error:', err);
     } finally {
         // Close the database connection
-        sql.close();
+        // sql.close();
+    }
+}
+
+async function addTeamStats(pointsAvg) {
+    try {
+        // Open database connection
+        const pool = await getPool(); // Use the global connection pool
+        const request = pool.request();
+        // await sql.connect(config);
+
+        // Set up the parameters
+        // const request = new sql.Request();
+        request.input('PointsAvg', sql.Decimal(6, 2), pointsAvg);
+        request.output('StatsID', sql.Int);
+
+        // Execute the stored procedure
+        const result = await request.execute('AddTeamStats');
+        console.log(result)
+
+        // Access the output parameter
+        const statsID = result.output.StatsID;
+        console.log('Stats ID:', statsID);
+
+        return statsID;
+    } catch (err) {
+        console.error('Error:', err);
+    } finally {
+        // Close the database connection
+        // sql.close();
     }
 }
 
 async function addPlayer(fName, lName, statsID) {
     try {
-        await sql.connect(config);
+        // await sql.connect(config);
+        const pool = await getPool(); // Use the global connection pool
+        const request = pool.request();
 
-        const request = new sql.Request();
+        // const request = new sql.Request();
         request.input('FName', sql.VarChar(255), fName);
         request.input('LName', sql.VarChar(255), lName);
         // Assuming the third parameter is not used in your procedure and is nullable
@@ -63,7 +104,27 @@ async function addPlayer(fName, lName, statsID) {
     } catch (err) {
         console.error('Error in ADDPLAYER:', err);
     } finally {
-        sql.close();
+        // sql.close();
+    }
+}
+
+async function addTeam(TName, statsID) {
+    try {
+        // await sql.connect(config);
+        const pool = await getPool(); // Use the global connection pool
+        const request = pool.request();
+
+        // const request = new sql.Request();
+        request.input('TName', sql.VarChar(255), TName);
+        request.input('StatsID', sql.Int, statsID);
+
+        const result = await request.execute('ADDTEAM');
+
+        console.log('Result of ADDTEAM:', result);
+    } catch (err) {
+        console.error('Error in ADDTEAM:', err);
+    } finally {
+        // sql.close();
     }
 }
 
@@ -95,6 +156,29 @@ async function processRow(row) {
     }
 }
 
+async function processTeamRow(row) {
+    try {
+        const TName = row['Team'];
+        //const FName = PName[0];
+        //const LName = PName.slice(1).join(" "); // Join all parts after the first one
+
+        // Skip processing if this player has already been processed
+        // const fullName = FName + " " + LName;
+        // if (processedPlayers.has(fullName)) {
+        //     return;
+        // }
+        // processedPlayers.add(fullName);
+
+        const ptsAvg = row['PTS'];
+
+        const statsID = await addTeamStats(ptsAvg);
+
+        await addTeam(TName, statsID);
+    } catch (err) {
+        console.error('Error processing row:', err);
+    }
+}
+
 async function processCsvFile(filePath) {
     const rows = [];
 
@@ -109,5 +193,31 @@ async function processCsvFile(filePath) {
         });
 }
 
+async function processCsvTeamFile(filePath) {
+    const rows = [];
+
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (row) => rows.push(row))
+        .on('end', async () => {
+            for (let row of rows) {
+                await processTeamRow(row);
+            }
+            console.log('CSV file processed successfully.');
+        });
+}
+
 // Replace 'nbadata.csv' with the path to your CSV file
-processCsvFile('nbadata.csv');
+async function main() {
+    try {
+        await processCsvFile('nbadata.csv');
+        await processCsvTeamFile('nbaTeamStats.csv');
+        // Any other operations...
+    } catch (err) {
+        console.error('Error during main execution:', err);
+    } finally {
+        if (pool) await pool.close(); // Close the pool only once at the end of all operations
+    }
+}
+
+main(); // Kick off the process

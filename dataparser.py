@@ -2,7 +2,7 @@
 # import pyodbc
 
 # server = 'golem.csse.rose-hulman.edu'
-# database = 'NBAOverUnderDB'
+# database = 'NBAOverUnderDB2'
 # username = 'nbaoverunderuser'
 # password = 'NBAPassword123'
 # cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' +
