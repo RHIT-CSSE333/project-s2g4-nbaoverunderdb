@@ -1,2 +1,3 @@
 venv/
 node_muodules/
+/flask_ui/settings.env

@@ -148,17 +148,6 @@
             <button #="register.html"></button>
         </div>
     </section>
-    <section id="about" aria-label="About">
-        <div class="container">
-            <article>
-                <hgroup>
-                    <h2>About This Tool</h2>
-                    <h3>How it Works</h3>
-                </hgroup>
-                <p>This NBA Stat Predictor uses advanced algorithms and historical data to analyze and predict player performances in upcoming games. By inputting a player's details and the targeted statistic, our tool provides an educated guess on whether they will exceed or fall short of the given baseline.</p>
-            </article>
-        </div>
-    </section>
     <script>
     $(document).ready(function(){
             
@@ -373,6 +362,9 @@
                     });
                 })
                 .catch(error => console.error('Error loading players:', error));
+                $("#statistic").autocomplete({
+                source: ["Points", "Assists", "Rebounds", "Steals", "Blocks", ]
+            });
             } else {
                 const teams = [];
                 fetch('/data/teams')

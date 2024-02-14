@@ -120,8 +120,12 @@
         <h1>View Parlays</h1>
         <div id="parlaysContainer">
             {% for parlay in parlays %}
-            <div class="parlay">
-                <div class="parlay-header">Bet: ${{ parlay.Bet }} - Payout: ${{ parlay.Payout }} - Picks: {{ parlay.Picks|length }}</div>
+            <div class="parlay" id="parlay-{{ parlay.ParlayID }}">
+                <div class="parlay-header">
+                    Bet: <span class="editable" id="bet-{{ parlay.ParlayID }}">${{ parlay.Bet }}</span> - 
+                    Payout: <span class="editable" id="payout-{{ parlay.ParlayID }}">${{ parlay.Payout }}</span> - 
+                    Picks: {{ parlay.Picks|length }}
+                </div>
                 <div class="parlay-details">
                     <table>
                         <thead>
@@ -146,6 +150,10 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="action-buttons">
+                    <button class="nav-button update-button" onclick="updateParlay('{{ parlay.ParlayID }}')">Update</button>
+                    <button class="logout-button delete-button" onclick="deleteParlay('{{ parlay.ParlayID }}')">Delete</button>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -153,11 +161,103 @@
     </main>
 
     <script>
+        var isUpdatingParlay = false;
+
         $(document).ready(function() {
             $('.parlay-header').click(function() {
-                $(this).next('.parlay-details').slideToggle('fast');
+                // Check if updateParlay is active; if so, prevent the default action
+                if (!isUpdatingParlay) {
+                    $(this).next('.parlay-details').slideToggle('fast');
+                }
             });
         });
+        function updateParlay(parlayId) {
+            // Convert static bet and payout text to editable input fields
+            isUpdatingParlay = true;
+            var betElement = document.getElementById('bet-' + parlayId);
+            var payoutElement = document.getElementById('payout-' + parlayId);
+
+            var betValue = betElement.innerText.replace('$', ''); // Remove $ for editing
+            var payoutValue = payoutElement.innerText.replace('$', '');
+
+            betElement.innerHTML = '<input type="number" id="betInput-' + parlayId + '" value="' + betValue + '">';
+            payoutElement.innerHTML = '<input type="number" id="payoutInput-' + parlayId + '" value="' + payoutValue + '">';
+
+            // Replace the Update button with a Confirm button
+            var actionButtonsDiv = betElement.closest('.parlay').querySelector('.action-buttons');
+            actionButtonsDiv.innerHTML = '<button class="nav-button confirm-button" onclick="confirmUpdate(\'' + parlayId + '\')">Confirm</button>';
+        }
+
+        function confirmUpdate(parlayId) {
+            // Get the input values
+            var betInput = document.getElementById('betInput-' + parlayId).value;
+            var payoutInput = document.getElementById('payoutInput-' + parlayId).value;
+
+            // Here, you would send the updated values to the server and handle the response
+                    $.ajax({
+                url: '/update-parlay/' + parlayId, // Your Flask route
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ bet: betInput, payout: payoutInput }), // Data to be sent to the server
+                success: function(response) {
+                    // Handle successful update here
+                    // You might want to update the parlay's display with the new values
+                    alert('Parlay updated successfully!');
+                    location.reload(); // Reload the page to reflect changes or update the UI as needed
+                },
+                error: function(error) {
+                    // Handle errors here
+                    console.error('Error updating parlay:', error);
+                    alert('Failed to update parlay. Please try again.');
+                }
+            });
+            isUpdatingParlay = false;
+
+            // Assuming the update is successful, revert the editable fields back to static text
+            // var betElement = document.getElementById('bet-' + parlayId);
+            // var payoutElement = document.getElementById('payout-' + parlayId);
+            // betElement.innerHTML = '$' + betInput; // Revert to static text
+            // payoutElement.innerHTML = '$' + payoutInput; // Revert to static text
+
+            // // Re-add the Update and Delete buttons
+            // var actionButtonsDiv = betElement.closest('.parlay').querySelector('.action-buttons');
+            // actionButtonsDiv.innerHTML = '<button class="nav-button update-button" onclick="updateParlay(\'' + parlayId + '\')">Update</button>' +
+            //                             '<button class="logout-button delete-button" onclick="deleteParlay(\'' + parlayId + '\')">Delete</button>'; 
+        }
+
+        function deleteParlay(parlayId) {
+            // Confirm deletion with the user
+            // if (confirm('Are you sure you want to delete this parlay?')) {
+            //     // Find the parlay element by ID and remove it from the DOM
+            //     var parlayElement = document.getElementById('parlay-' + parlayId);
+            //     if (parlayElement) {
+            //         parlayElement.remove();
+            //         console.log('Parlay with ID:', parlayId, 'has been deleted.');
+            //         // Here, you would also send a request to your server to delete the parlay from the database
+            //     } else {
+            //         console.error('Parlay element not found for ID:', parlayId);
+            //     }
+            // }
+            if (confirm('Are you sure you want to delete this parlay?')) {
+            // Perform an AJAX request to your Flask route for deleting
+                $.ajax({
+                    url: '/delete-parlay/' + parlayId, // Your Flask route
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ id: parlayId }), // Data to be sent to the server, if needed
+                    success: function(response) {
+                        // Handle successful deletion here
+                        alert('Parlay deleted successfully!');
+                        location.reload(); // Reload the page to reflect changes or directly remove the element from the DOM
+                    },
+                    error: function(error) {
+                        // Handle errors here
+                        console.error('Error deleting parlay:', error);
+                        alert('Failed to delete parlay. Please try again.');
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
