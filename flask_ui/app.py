@@ -415,6 +415,8 @@ def update_parlay(parlay_id):
     data = request.json
     bet = data.get('bet')
     payout = data.get('payout')
+    if not int(payout):
+        return jsonify({'message': 'ERROR: Payout should be an integer', 'id': parlay_id, 'bet': bet, 'payout': payout}) 
     # Update the parlay in your database here
     username = session['username']
     conn = get_db_connection()
@@ -522,6 +524,9 @@ def create_parlay():
     bet_amount = data.get('betAmount')
     payout_amount = data.get('payoutAmount')
     selected_picks = data.get('picks')  # List of Pick IDs
+
+    if len(selected_picks) == 0:
+        return jsonify({'success': False, 'response': 'Please add picks',})
     try: 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -530,6 +535,9 @@ def create_parlay():
         cursor.execute("SELECT @@IDENTITY;")
         parlay_id = cursor.fetchval()
         username = session['username']
+
+        if not parlay_id:
+            return jsonify({'success': False})
 
         # For each pick, associate it with the created parlay
         for pick_id in selected_picks:

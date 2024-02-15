@@ -146,7 +146,11 @@
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function(response) {
-                   alert("Parlay created successfully", response);
+                   if (response["success"]) {
+                    alert("Parlay created successfully", response);
+                   } else {
+                    alert("Error creating parlay", response);
+                   }
                 },
                 error: function(error) {
                     alert("Error creating parlay", error);
