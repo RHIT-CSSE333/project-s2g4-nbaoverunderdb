@@ -217,6 +217,8 @@
 
 
             document.getElementById('predictButton').addEventListener('click', function() {
+                document.getElementById('saveButton').style.display = 'display:none'
+
                 // Extract values from input fields
                 const playerTeam = document.getElementById('playerTeam').value;
                 const player = document.getElementById('player').value;
@@ -239,6 +241,41 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('predictionResult').textContent = 'Prediction: ' + data.result;
+                    if (data.result != "Error Creating Prediction. Please try again") {
+                    document.getElementById('saveButton').style.display = 'block';
+                    document.getElementById('saveButton').addEventListener('click', function() {
+        player = null;
+        team = null;
+        if (document.getElementById('playerTeam').value === 'Player') {
+            player = document.getElementById('player').value
+        } else {
+            team = document.getElementById('player').value
+        }
+        const dataToSave = {
+            player: player,
+            team: team, 
+            playingAgainst: document.getElementById('playingAgainst').value,
+            statistic: document.getElementById('baseline').value + " " + document.getElementById('statistic').value,
+            prediction: document.getElementById('predictionResult').textContent
+        };
+
+        fetch('/save-pick', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSave)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Pick saved successfully');
+            } else {
+                alert('Failed to save pick');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    })}
                 })
                 .catch(error => console.error('Error:', error));
             });
@@ -386,50 +423,8 @@
                 });
         }
 
-        $(document).ready(function() {
-    // ... existing code ...
 
-    document.getElementById('predictButton').addEventListener('click', function() {
-        // ... existing prediction code ...
 
-        // After prediction, show the save button
-        document.getElementById('saveButton').style.display = 'block';
-    });
-
-    document.getElementById('saveButton').addEventListener('click', function() {
-        player = null;
-        team = null;
-        if (document.getElementById('playerTeam').value === 'Player') {
-            player = document.getElementById('player').value
-        } else {
-            team = document.getElementById('player').value
-        }
-        const dataToSave = {
-            player: player,
-            team: team, 
-            playingAgainst: document.getElementById('playingAgainst').value,
-            statistic: document.getElementById('baseline').value + " " + document.getElementById('statistic').value,
-            prediction: document.getElementById('predictionResult').textContent
-        };
-
-        fetch('/save-pick', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(dataToSave)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Pick saved successfully');
-            } else {
-                alert('Failed to save pick');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-});
         </script>
             <style>
                 .logout-button {

@@ -605,26 +605,30 @@ def save_pick():
 @app.route('/execute-script', methods=['POST'])
 def execute_script():
     # Extract data from the request
-    data = request.json
-    playerTeam = data.get('playerTeam')
-    player = data.get('player')
-    homeAway = data.get('homeAway')
-    playingAgainst = data.get('playingAgainst')
-    stat = data.get('statistic')
-    baseline = float(data.get('baseline'))
+    try: 
+        data = request.json
+        playerTeam = data.get('playerTeam')
+        player = data.get('player')
+        homeAway = data.get('homeAway')
+        playingAgainst = data.get('playingAgainst')
+        stat = data.get('statistic')
+        baseline = float(data.get('baseline'))
 
-    # Your prediction logic here using the extracted data
-    prediction = run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
+        # Your prediction logic here using the extracted data
+        prediction = run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline)  # Adjust with your function
 
-    if prediction:
-        if float(prediction) > baseline:
-            prediction = f"Over (Predicting {prediction} {stat})"
+        if prediction:
+            if float(prediction) > baseline:
+                prediction = f"Over (Predicting {prediction} {stat})"
+            else:
+                prediction = f"Under (Predicting {prediction} {stat})"
         else:
-            prediction = f"Under (Predicting {prediction} {stat})"
-    else:
-        prediction = f"Error Creating Prediction. Please try again"
+            prediction = f"Error Creating Prediction. Please try again"
 
-    return jsonify({'result': prediction})
+        return jsonify({'result': prediction})
+    except Exception as e:
+        return jsonify({'result': "Error Creating Prediction. Please try again"})
+    
 
 def run_prediction(playerTeam, player, homeAway, playingAgainst, stat, baseline):
     if playerTeam == 'Player': # predict player
