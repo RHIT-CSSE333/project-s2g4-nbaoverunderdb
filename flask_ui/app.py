@@ -238,12 +238,8 @@ def delete_favorite_player():
     cursor = cnxn.cursor()
     try:
         cursor.execute("EXEC DeleteFavoritePlayer @PlayerFName = ?, @PlayerLName = ?, @UserName = ?", first_name, last_name, user_name)
-        result = cursor.fetchall()
         cnxn.commit()
-        if result == 0:
-            return jsonify({'success': True, 'message': 'Player deleted successfully'})
-        else:
-            return jsonify({'success': False, 'message': 'Error deleting player'})
+        return jsonify({'success': True, 'message': 'Player deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error deleting player', 'error': str(e)})
     finally:
@@ -301,14 +297,9 @@ def delete_favorite_team():
     cnxn = get_db_connection()
     cursor = cnxn.cursor()
     try:
-        print("here running well")
         cursor.execute("EXEC DeleteFavoriteTeam @TeamName = ?, @UserName = ?", team_name, user_name)
-        result = cursor.fetchall()
         cnxn.commit()
-        if result == 0:
-            return jsonify({'success': True, 'message': 'Team deleted successfully'})
-        else:
-            return jsonify({'success': False, 'message': 'Error deleting team'})
+        return jsonify({'success': True, 'message': 'Team deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Error deleting team', 'error': str(e)})
     finally:

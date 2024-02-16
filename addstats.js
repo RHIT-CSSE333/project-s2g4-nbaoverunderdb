@@ -6,10 +6,10 @@ const csv = require('csv-parser');
 const config = {
     user: 'nbaoverunderuser',
     password: 'NBAPassword123',
-    server: 'golem.csse.rose-hulman.edu', // You can use 'localhost\\instance' to connect to named instance
-    database: 'NBAOverUnderDB2',
+    server: 'golem.csse.rose-hulman.edu',
+    database: 'NBAOverUnderDB5',
     options: {
-        trustServerCertificate: true // This bypasses the SSL certificate validation
+        trustServerCertificate: true 
     }
 };
 

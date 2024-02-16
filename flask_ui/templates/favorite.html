@@ -241,9 +241,13 @@ function deleteFavoriteTeam(url, data) {
             e.preventDefault();
             let name = document.getElementById('player').value;
             const names =name.split(" ");
-            let firstName = names[0];
-            let lastName = names[1];
-            submitData('/addFavoritePlayer', {firstName, lastName});
+            if (names.length > 1) {
+                let firstName = names[0];
+                let lastName = names[1];
+                submitData('/addFavoritePlayer', {firstName, lastName});
+            } else {
+                alert("Error adding player as favorite")
+            }
         });
         
     
